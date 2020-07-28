@@ -3,9 +3,9 @@
 static inline void init_keyschedule_ (uint64_t * SHIM_RESTRICT key,
 				      uint64_t * SHIM_RESTRICT twk)
 {
-	key[ SYMM_THREEFISH512_BLOCK_WORDS ] = SYMM_THREEFISH512_CONSTANT_240;
-	key[ SYMM_THREEFISH512_BLOCK_WORDS ] ^= key[ 0 ] ^ key[ 1 ] ^ key[ 2 ] ^ key[ 3 ]
-					      ^ key[ 4 ] ^ key[ 5 ] ^ key[ 6 ] ^ key[ 7 ];
+	key[ SYMM_THREEFISH512_BLOCK_WORDS ] = SYMM_THREEFISH512_CONSTANT_240 ^
+						key[ 0 ] ^ key[ 1 ] ^ key[ 2 ] ^ key[ 3 ] ^
+						key[ 4 ] ^ key[ 5 ] ^ key[ 6 ] ^ key[ 7 ];
 	twk[ 2 ] = twk[ 0 ] ^ twk[ 1 ];
 }
 
@@ -223,7 +223,7 @@ symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 		uint64_t offset         = starting_byte % SYMM_THREEFISH512_BLOCK_BYTES;
 		uint64_t bytes          = SYMM_THREEFISH512_BLOCK_BYTES - offset;
 		memcpy( ctx->keystream, &starting_block, sizeof(starting_block) );
-		symm_threefish512_stored_cipher( &ctx->threefish_ctx,
+		symm_threefish512_stored_cipher( &ctx->threefish_stored,
 						 ctx->buffer,
 						 ctx->keystream );
 		SHIM_BIT_CAST_OP (ctx->keystream, uint64_t, tmp, ++tmp);
@@ -241,8 +241,8 @@ symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 		input_size -= left;
 	}
 	while( input_size >= SYMM_THREEFISH512_BLOCK_BYTES ) {
-		symm_threefish512_stored_cipher( &ctx->threefish_ctx,
-				                 ctx->buffer,
+		symm_threefish512_stored_cipher( &ctx->threefish_stored,
+						 ctx->buffer,
 						 ctx->keystream );
 		SHIM_BIT_CAST_OP (ctx->keystream, uint64_t, tmp, ++tmp);
 		shim_xor_64( ctx->buffer, input );
@@ -252,7 +252,7 @@ symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 		input_size -= SYMM_THREEFISH512_BLOCK_BYTES;
 	}
 	if( input_size > 0 ) {
-		symm_threefish512_stored_cipher( &ctx->threefish_ctx,
+		symm_threefish512_stored_cipher( &ctx->threefish_stored,
 						 ctx->buffer,
 						 ctx->keystream );
 		for( uint64_t i = 0; i < input_size; ++i )

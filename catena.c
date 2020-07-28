@@ -191,10 +191,10 @@ make_tweak_usephi_ (Symm_Catena * SHIM_RESTRICT ctx,
 	(*t++) = SYMM_CATENA_DOMAIN_KDF;
 	(*t++) = lambda;
 	{
-		uint16_t tmp = (uint16_t)(SYMM_THREEFISH512_BLOCK_BYTES);
+		uint16_t tmp = SYMM_THREEFISH512_BLOCK_BYTES;
 		memcpy( t, &tmp, sizeof(tmp) );
 		t += sizeof(tmp);
-		tmp = (uint16_t)SYMM_CATENA_SALT_BYTES;
+		tmp = SYMM_CATENA_SALT_BYTES;
 		memcpy( t, &tmp, sizeof(tmp) );
 	}
 }
