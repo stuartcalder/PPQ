@@ -13,16 +13,6 @@
 				   dest, \
 				   src, \
 				   (SYMM_THREEFISH512_BLOCK_BYTES * 2) )
-#if 0
-#define DEBUG_OUT_(msg) \
-	fprintf( stderr, msg )
-#define DEBUG_VOUT_(msg, ...) \
-	fprintf( stderr, msg, __VA_ARGS__ )
-#else
-#define DEBUG_OUT_(nil)
-#define DEBUG_VOUT_(...)
-#endif
-
 SHIM_BEGIN_DECLS
 
 static void
@@ -79,72 +69,44 @@ symm_catena_nophi (Symm_Catena * SHIM_RESTRICT ctx,
 		   uint8_t const               g_high,
 		   uint8_t const               lambda)
 {
-	DEBUG_VOUT_ ("Initial parameters:\n"
-		     "ctx pointer: %p\n"
-		     "output pointer: %p\n"
-		     "password: %s\n"
-		     "password_size: %d\n"
-		     "g_low: %" PRIu8 "\n"
-		     "g_high: %" PRIu8 "\n"
-		     "lambda: %" PRIu8 "\n",
-		     ctx, output, password, password_size,
-		     g_low, g_high, lambda);
 	/* Allocate the graph memory. Free it at the end of the procedure; return on alloc failure. */
 	ctx->graph_memory = (uint8_t *)malloc((UINT64_C(1) << g_high) * SYMM_THREEFISH512_BLOCK_BYTES);
 	if (!ctx->graph_memory)
 		return SYMM_CATENA_ALLOC_FAILURE;
-	DEBUG_VOUT_ ("Successfully allocated %" PRIu64 " bytes into `graph_memory`\n",
-		     ((UINT64_C (1) << g_high) * SYMM_THREEFISH512_BLOCK_BYTES));
 	/* Construct the tweak; concatenation with password and salt and hash into the x buffer. */
 	make_tweak_nophi_(ctx, lambda);
-	DEBUG_OUT_ ("Called make_tweak_nophi_(ctx,lambda)\n");
 	memcpy(ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES,
 	       password,
 	       password_size);
-	DEBUG_VOUT_ ("Copied %d password bytes into tw_pw_salt\n", password_size);
 	shim_secure_zero(password, password_size);
-	DEBUG_VOUT_ ("Zeroed over %d password bytes from the password pointer.\n", password_size);
 	memcpy(ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES + password_size,
 	       ctx->salt,
 	       sizeof(ctx->salt));
-	DEBUG_OUT_ ("Copied the salt into tw_pw_salt\n");
 	symm_skein512_hash_native(&ctx->ubi512_ctx,
 				  ctx->x_buffer,
 				  ctx->temp.tw_pw_salt,
 				  password_size + (SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_SALT_BYTES));
-	DEBUG_VOUT_ ("Hashed %d bytes of tw_pw_salt\n", (password_size + (SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_SALT_BYTES)));
 	/* Initial flap; hash the x buffer into itself. */
 	flap_nophi_(ctx, (g_low + 1) / 2, lambda);
-	DEBUG_VOUT_ ("Before flap_nophi_ is called, g_low is %" PRIu8 "\n", g_low);
-	DEBUG_VOUT_ ("Before flap_nophi_ is called, g_high is %" PRIu8 "\n", g_high);
-	DEBUG_VOUT_ ("Before flap_nophi_ is called, lambda is %" PRIu8 "\n", lambda);
-	DEBUG_OUT_ ("Called flap_nophi_(ctx, (g_low+1)/2, lambda)\n");
 	symm_skein512_hash_native(&ctx->ubi512_ctx,
 				  ctx->x_buffer,
 				  ctx->x_buffer,
 				  sizeof(ctx->x_buffer));
-	DEBUG_OUT_ ("Hashed the x buffer into itself\n");
 	for (uint8_t g = g_low; g <= g_high; ++g) {
 	/* Iterating flap over incrementing garlics of g, hashing the output
 	 * into the x buffer. */
 		flap_nophi_(ctx, g, lambda);
-		DEBUG_VOUT_ ("called flap_nophi_ with g=%" PRIu8 "\n", g);
 		*(ctx->temp.catena) = g;
 		COPY_HASH_WORD_(ctx->temp.catena + sizeof(uint8_t), ctx->x_buffer);
-		DEBUG_OUT_ ("Copied the x buffer into temp.catena\n");
 		symm_skein512_hash_native(&ctx->ubi512_ctx,
 					  ctx->x_buffer,
 					  ctx->temp.catena,
 					  sizeof(ctx->temp.catena));
-		DEBUG_OUT_ ("Hashed temp.catena into the x buffer.\n");
 	}
 	/* Zero over and free the memory. Copy the buffer out of the procedure. */
 	shim_secure_zero(ctx->graph_memory, (UINT64_C (1) << g_high) * SYMM_THREEFISH512_BLOCK_BYTES);
-	DEBUG_OUT_ ("Securely zeroed over the graph memory\n");
 	free(ctx->graph_memory);
-	DEBUG_OUT_ ("Freed the graph memory\n");
 	COPY_HASH_WORD_(output, ctx->x_buffer);
-	DEBUG_OUT_ ("Copied the x buffer out\n");
 	return SYMM_CATENA_SUCCESS;
 }
 int SHIM_PUBLIC
@@ -254,82 +216,60 @@ flap_nophi_ (Symm_Catena * SHIM_RESTRICT ctx,
 	memcpy(ctx->ubi512_ctx.key_state,
 	       Config,
 	       sizeof(Config));
-	DEBUG_OUT_ ("Copied 32 bytes of configuration string into the key state.\n");
 	symm_ubi512_chain_message(&ctx->ubi512_ctx,
 				  INDEX_HASH_WORD_ (X_MEM_, 0),
 				  SYMM_THREEFISH512_BLOCK_BYTES);
-	DEBUG_OUT_ ("Chained 64 bytes of the X buffer into the key state.\n");
 	symm_ubi512_chain_output(&ctx->ubi512_ctx,
 				  INDEX_HASH_WORD_ (TEMP_MEM_, 0),
 				  (SYMM_THREEFISH512_BLOCK_BYTES * 2));
-	DEBUG_OUT_ ("Chained 128 bytes of output into temporary flap memory.\n");
 	HASH_TWO_WORDS_(ctx,
 			INDEX_HASH_WORD_ (TEMP_MEM_, 1),
 			INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-	DEBUG_OUT_ ("Hashed temp word 0 concatenated with temp word 1, stored in temp word 1's address.\n");
 	COPY_HASH_WORD_(INDEX_HASH_WORD_ (TEMP_MEM_, 2),
 			INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-	DEBUG_OUT_ ("Copied temp word 0 into temp word 2's address.\n");
 	HASH_TWO_WORDS_(ctx,
 			INDEX_HASH_WORD_ (TEMP_MEM_,  0),
 			INDEX_HASH_WORD_ (TEMP_MEM_,  1));
-	DEBUG_OUT_ ("Hashed temp word 1 concatenated with temp word 2, stored the output in temp word 0's address.\n");
 	COPY_HASH_WORD_(INDEX_HASH_WORD_ (GRAPH_MEM_, 0),
 			INDEX_HASH_WORD_ (TEMP_MEM_,  1));
-	DEBUG_OUT_ ("Copied temp word 1 into graph word 0's address.\n");
 	COPY_HASH_WORD_(INDEX_HASH_WORD_ (GRAPH_MEM_, 1),
 			INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-	DEBUG_OUT_ ("Copied temp word 0 into graph word 1's address.\n");
 	uint64_t const max_hash_index = (UINT64_C (1) << garlic) - 1;
 	if( max_hash_index > 1 ) {
-		DEBUG_OUT_ ("max_hash_index was greater than 1\n");
 		HASH_TWO_WORDS_ (ctx,
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  2),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		DEBUG_OUT_ ("Hashed temp{0,1} into temp{2}\n");
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 2),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  2));
-		DEBUG_OUT_ ("Copied temp{2} into graph{2}\n");
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_,  1),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  2));
-		DEBUG_OUT_ ("Copied temp{2} into temp{1}\n");
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_,  2),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		DEBUG_OUT_ ("Copied temp{0} into temp{2}\n");
 		HASH_TWO_WORDS_ (ctx,
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  0),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  1));
-		DEBUG_OUT_ ("Hashed temp{1,2} into temp{0}\n");
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 3),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		DEBUG_OUT_ ("Copied temp{0} into graph{3}\n");
 	}
 	for( uint64_t i = 4; i <= max_hash_index; ++i ) {
 		HASH_TWO_WORDS_ (ctx,
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  2),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		DEBUG_OUT_ ("Hashed temp{0,1} into temp{2}\n");
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_,  1),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		DEBUG_OUT_ ("Copied temp{0} into temp{1}\n");
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_,  0),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  2));
-		DEBUG_OUT_ ("Copied temp{2} into temp{0}\n");
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, i),
 				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		DEBUG_VOUT_ ("Copied temp{0} into graph{%" PRIu64  "}\n", i);
 	}
 	gamma_( ctx, garlic );
-	DEBUG_OUT_ ("Called gamma( ctx, garlic )\n");
 	symm_graph_hash( &ctx->ubi512_ctx,
 			 ctx->temp.mhf,
 			 GRAPH_MEM_,
 			 garlic,
 			 lambda );
-	DEBUG_OUT_ ("Called symm_graph_hash(&ctx->ubi512_ctx, ctx->temp.mhf, GRAPH_MEM_, garlic, lambda)\n");
 	COPY_HASH_WORD_ (INDEX_HASH_WORD_ (X_MEM_, 0),
 			 INDEX_HASH_WORD_ (GRAPH_MEM_, max_hash_index));
-	DEBUG_VOUT_ ("Copied index %" PRIu64 " of graph into the x buffer.\n", max_hash_index);
 #undef X_MEM_
 #undef GRAPH_MEM_
 #undef TEMP_MEM_
