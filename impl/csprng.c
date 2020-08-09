@@ -19,6 +19,7 @@ symm_csprng_reseed (Symm_CSPRNG *   SHIM_RESTRICT ctx,
 void SHIM_PUBLIC
 symm_csprng_os_reseed (Symm_CSPRNG * ctx)
 {
+	SHIM_STATIC_ASSERT (sizeof(ctx->buffer) == (SYMM_THREEFISH512_BLOCK_BYTES * 2), "Wrong buffer size.");
 	memcpy( ctx->buffer,
 		ctx->seed,
 		SYMM_THREEFISH512_BLOCK_BYTES );

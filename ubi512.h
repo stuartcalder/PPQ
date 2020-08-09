@@ -19,7 +19,7 @@
 typedef struct SHIM_PUBLIC {
 	Symm_Threefish512_On_Demand threefish_ctx;
 	uint64_t                    key_state   [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
-	uint8_t                     msg_state   [SYMM_THREEFISH512_BLOCK_BYTES];
+	alignas(uint64_t) uint8_t   msg_state   [SYMM_THREEFISH512_BLOCK_BYTES];
 	uint64_t                    tweak_state [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
 } Symm_UBI512;
 

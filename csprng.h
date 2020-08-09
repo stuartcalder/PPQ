@@ -3,18 +3,20 @@
 
 #include <shim/macros.h>
 #include <shim/operations.h>
-#include <skein512.h>
+#include "skein512.h"
 
 typedef struct SHIM_PUBLIC {
-	Symm_UBI512 ubi512_ctx;
-	uint8_t     buffer [SYMM_THREEFISH512_BLOCK_BYTES * 2];
-	uint8_t     seed   [SYMM_THREEFISH512_BLOCK_BYTES];
+	Symm_UBI512               ubi512_ctx;
+	alignas(uint64_t) uint8_t buffer [SYMM_THREEFISH512_BLOCK_BYTES * 2];
+	alignas(uint64_t) uint8_t seed   [SYMM_THREEFISH512_BLOCK_BYTES];
 } Symm_CSPRNG;
 
 SHIM_BEGIN_DECLS
 
-#define SYMM_CSPRNG_INIT_SEED(csprng_ctx) \
-	shim_obtain_os_entropy( csprng_ctx->seed, sizeof(csprng_ctx->seed) )
+static inline void
+symm_csprng_init (Symm_CSPRNG * ctx) {
+	shim_obtain_os_entropy( ctx->seed, sizeof(ctx->seed) );
+}
 
 void SHIM_PUBLIC
 symm_csprng_reseed (Symm_CSPRNG *   SHIM_RESTRICT ctx,
@@ -28,4 +30,5 @@ symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
 		 uint64_t                    requested_bytes);
 
 SHIM_END_DECLS
+
 #endif // ~ SYMM_CSPRNG_H

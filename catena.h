@@ -18,9 +18,9 @@
 #else
 #	define SYMM_CATENA_RNG_BYTES	SYMM_CATENA_SALT_BYTES
 #endif
-#define SYMM_CATENA_DOMAIN_PWSCRAMBLER	UINT8_C (0x00)
-#define SYMM_CATENA_DOMAIN_KDF		UINT8_C (0x01)
-#define SYMM_CATENA_DOMAIN_POW		UINT8_C (0x02)
+#define SYMM_CATENA_DOMAIN_PWSCRAMBLER	UINT8_C (0)
+#define SYMM_CATENA_DOMAIN_KDF		UINT8_C (1)
+#define SYMM_CATENA_DOMAIN_POW		UINT8_C (2)
 #define SYMM_CATENA_MHF_TEMP_BYTES	SYMM_GRAPH_HASHING_TEMP_BYTES
 
 typedef struct SHIM_PUBLIC {
@@ -29,7 +29,7 @@ typedef struct SHIM_PUBLIC {
 	alignas(uint64_t) uint8_t x_buffer [SYMM_THREEFISH512_BLOCK_BYTES];
 	alignas(uint64_t) uint8_t salt     [SYMM_CATENA_SALT_BYTES];
 	union {
-		alignas(uint64_t) uint8_t tw_pw_salt [SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_MAX_PASSWORD_BYTES + SYMM_CATENA_SALT_BYTES];
+		uint8_t                   tw_pw_salt [SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_MAX_PASSWORD_BYTES + SYMM_CATENA_SALT_BYTES];
 		alignas(uint64_t) uint8_t flap       [SYMM_THREEFISH512_BLOCK_BYTES * 3];
 		alignas(uint64_t) uint8_t catena     [SYMM_THREEFISH512_BLOCK_BYTES + sizeof(uint8_t)];
 		alignas(uint64_t) uint8_t phi        [SYMM_THREEFISH512_BLOCK_BYTES * 2];
