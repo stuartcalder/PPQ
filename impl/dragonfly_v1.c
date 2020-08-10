@@ -69,9 +69,11 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 						     catena_input_ptr->g_low,
 						     catena_input_ptr->g_high,
 						     catena_input_ptr->lambda );
-			if( ret != SYMM_CATENA_SUCCESS ) {
-				CLEANUP_ERROR_ (dragonfly_v1_ptr->secret);
-				SHIM_ERRX ("Error: Catena failed with error code %d...\nAllocating too much memory?\n", ret);
+			switch( ret ) {
+				case SYMM_CATENA_ALLOC_FAILURE:
+					CLEANUP_ERROR_ (dragonfly_v1_ptr->secret);
+					SHIM_ERRX ("Error: Catena failed with error code %d...\nAllocating too much memory?\n", ret);
+					break;
 			}
 			shim_secure_zero( &dragonfly_v1_ptr->secret.catena, sizeof(dragonfly_v1_ptr->secret.catena) );
 		} else {
@@ -85,9 +87,11 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 						      catena_input_ptr->g_low,
 						      catena_input_ptr->g_high,
 						      catena_input_ptr->lambda );
-			if( ret != SYMM_CATENA_SUCCESS ) {
-				CLEANUP_ERROR_ (dragonfly_v1_ptr->secret);
-				SHIM_ERRX ("Error: Catena failed with error code %d...\nAllocating too much memory?\n", ret);
+			switch( ret ) {
+				case SYMM_CATENA_ALLOC_FAILURE:
+					CLEANUP_ERROR_ (dragonfly_v1_ptr->secret);
+					SHIM_ERRX ("Error: Catena failed with error code %d...\nAllocating too much memory?\n", ret);
+					break;
 			}
 			shim_secure_zero( &dragonfly_v1_ptr->secret.catena, sizeof(dragonfly_v1_ptr->secret.catena) );
 		}
@@ -178,15 +182,15 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 	}
 	uint8_t const *in = input_map_p->ptr;
 	struct {
-		uint64_t                  tweak       [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
-		alignas(uint64_t) uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
-		alignas(uint64_t) uint8_t ctr_iv      [SYMM_THREEFISH512_CTR_IV_BYTES];
-		uint64_t                  header_size;
-		uint8_t                   header_id   [sizeof(SYMM_DRAGONFLY_V1_ID)];
-		uint8_t                   g_low;
-		uint8_t                   g_high;
-		uint8_t                   lambda;
-		uint8_t                   use_phi;
+		uint64_t                        tweak       [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
+		SHIM_ALIGNAS (uint64_t) uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
+		SHIM_ALIGNAS (uint64_t) uint8_t ctr_iv      [SYMM_THREEFISH512_CTR_IV_BYTES];
+		uint64_t                        header_size;
+		uint8_t                         header_id   [sizeof(SYMM_DRAGONFLY_V1_ID)];
+		uint8_t                         g_low;
+		uint8_t                         g_high;
+		uint8_t                         lambda;
+		uint8_t                         use_phi;
 	} pub;
 	{
 		memcpy( pub.header_id, in, sizeof(pub.header_id) );

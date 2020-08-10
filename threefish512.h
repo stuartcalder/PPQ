@@ -33,9 +33,9 @@ typedef struct SHIM_PUBLIC {
 } Symm_Threefish512_On_Demand;
 
 typedef struct SHIM_PUBLIC {
-	Symm_Threefish512_Stored  threefish_stored; 
-	uint8_t alignas(uint64_t) keystream [SYMM_THREEFISH512_BLOCK_BYTES];
-	uint8_t alignas(uint64_t) buffer    [SYMM_THREEFISH512_BLOCK_BYTES];
+	Symm_Threefish512_Stored        threefish_stored; 
+	SHIM_ALIGNAS (uint64_t) uint8_t keystream [SYMM_THREEFISH512_BLOCK_BYTES];
+	SHIM_ALIGNAS (uint64_t) uint8_t buffer    [SYMM_THREEFISH512_BLOCK_BYTES];
 } Symm_Threefish512_CTR;
 
 SHIM_BEGIN_DECLS
