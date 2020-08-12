@@ -17,7 +17,7 @@
 
 #define INIT_TWEAK_(ctx_ptr, init_bitwise_or) \
 	memset( ctx_ptr->tweak_state, 0, SYMM_THREEFISH512_TWEAK_BYTES ); \
-	MODIFY_TWEAK_FLAGS_ (ctx, |=, (SYMM_UBI512_TWEAK_FIRST_BIT | init_bitwise_or))
+	MODIFY_TWEAK_FLAGS_ (ctx_ptr, |=, (SYMM_UBI512_TWEAK_FIRST_BIT | init_bitwise_or))
 
 void SHIM_PUBLIC
 symm_ubi512_chain_config (Symm_UBI512 * SHIM_RESTRICT ctx,
