@@ -1,23 +1,23 @@
 #include "ubi512.h"
 
-#define REKEY_CIPHER_XOR_(ctx_ptr) \
-	symm_threefish512_ondemand_rekey( &ctx_ptr->threefish_ctx, \
-					  ctx_ptr->key_state, \
-					  ctx_ptr->tweak_state ); \
-	symm_threefish512_ondemand_cipher( &ctx_ptr->threefish_ctx, \
-					   (uint8_t *)ctx_ptr->key_state, \
-					   ctx_ptr->msg_state ); \
-	shim_xor_64( ctx_ptr->key_state, ctx_ptr->msg_state )
+#define REKEY_CIPHER_XOR_(ctx_p) \
+	symm_threefish512_ondemand_rekey( &ctx_p->threefish_ctx, \
+					  ctx_p->key_state, \
+					  ctx_p->tweak_state ); \
+	symm_threefish512_ondemand_cipher( &ctx_p->threefish_ctx, \
+					   (uint8_t *)ctx_p->key_state, \
+					   ctx_p->msg_state ); \
+	shim_xor_64( ctx_p->key_state, ctx_p->msg_state )
 					  
-#define MODIFY_TWEAK_FLAGS_(ctx_ptr, operation, value) \
-	((uint8_t *)ctx_ptr->tweak_state)[ SYMM_THREEFISH512_TWEAK_BYTES - 1 ] operation value
+#define MODIFY_TWEAK_FLAGS_(ctx_p, operation, value) \
+	((uint8_t *)ctx_p->tweak_state)[ SYMM_THREEFISH512_TWEAK_BYTES - 1 ] operation value
 
-#define MODIFY_TWEAK_POSITION_(ctx_ptr, operation, value) \
-	ctx_ptr->tweak_state[ 0 ] operation ((uint64_t)value)
+#define MODIFY_TWEAK_POSITION_(ctx_p, operation, value) \
+	ctx_p->tweak_state[ 0 ] operation value
 
-#define INIT_TWEAK_(ctx_ptr, init_bitwise_or) \
-	memset( ctx_ptr->tweak_state, 0, SYMM_THREEFISH512_TWEAK_BYTES ); \
-	MODIFY_TWEAK_FLAGS_ (ctx_ptr, |=, (SYMM_UBI512_TWEAK_FIRST_BIT | init_bitwise_or))
+#define INIT_TWEAK_(ctx_p, init_bitwise_or) \
+	memset( ctx_p->tweak_state, 0, SYMM_THREEFISH512_TWEAK_BYTES ); \
+	MODIFY_TWEAK_FLAGS_ (ctx_p, |=, (SYMM_UBI512_TWEAK_FIRST_BIT | init_bitwise_or))
 
 void SHIM_PUBLIC
 symm_ubi512_chain_config (Symm_UBI512 * SHIM_RESTRICT ctx,

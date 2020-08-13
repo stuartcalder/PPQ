@@ -67,6 +67,16 @@ elif os == 'windows'
   include_install = 'C:/include'
 endif
 
+if os == 'openbsd' or os == 'freebsd' or os == 'darwin'
+  lib_deps += compiler.find_library('shim')
+elif os == 'netbsd'
+  lib_deps += compiler.find_library('shim')
+elif os == 'linux'
+  lib_deps += compiler.find_library('shim')
+elif os == 'windows'
+  lib_deps += compiler.find_library('shim')
+endif
+
 inc_dir += '..'
 
 install_subdir('../symm', install_dir: include_install, exclude_directories: ['builddir', '.git', 'impl'], exclude_files: '.gitignore')
