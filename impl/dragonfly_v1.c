@@ -101,6 +101,8 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 				    dragonfly_v1_ptr->secret.hash_out,
 				    SYMM_THREEFISH512_BLOCK_BYTES,
 				    (SYMM_THREEFISH512_BLOCK_BYTES * 2) );
+		SHIM_STATIC_ASSERT (sizeof(dragonfly_v1_ptr->secret.hash_out) >= (SYMM_THREEFISH512_BLOCK_BYTES * 2),
+				    "hash_out must be at least this large.");
 		memcpy( dragonfly_v1_ptr->secret.enc_key,
 			dragonfly_v1_ptr->secret.hash_out,
 			SYMM_THREEFISH512_BLOCK_BYTES );
