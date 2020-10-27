@@ -36,6 +36,11 @@
 #define SYMM_COMMON_REENTRY_PROMPT		"Please input the same password again." SYMM_COMMON_PROMPT
 #define SYMM_COMMON_ENTROPY_PROMPT		"Please input up to " SYMM_COMMON_MAX_ENTROPY_BYTES_STR " characters." SYMM_COMMON_PROMPT
 
+enum {
+	SYMM_COMMON_PAD_MODE_ADD,
+	SYMM_COMMON_PAD_MODE_TARGET
+};
+
 typedef struct SHIM_PUBLIC {
 #if (SYMM_COMMON_ENTROPY_BUFFER_BYTES > SYMM_COMMON_PASSWORD_BUFFER_BYTES)
 #	define CHECK_BUFFER_BYTES_	SYMM_COMMON_ENTROPY_BUFFER_BYTES
@@ -47,6 +52,7 @@ typedef struct SHIM_PUBLIC {
 	uint8_t	    check_buffer    [CHECK_BUFFER_BYTES_];
 	uint64_t    password_size;
 	uint64_t    padding_bytes;
+	int         padding_mode;
 	bool        supplement_entropy;
 	uint8_t     g_low;
 	uint8_t     g_high;
