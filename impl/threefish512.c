@@ -1,14 +1,14 @@
 #include "threefish512.h"
 
 #define INIT_KEYSCHEDULE_(key_ptr, twk_ptr) \
-	SHIM_MACRO_SHIELD \
-	key_ptr[ SYMM_THREEFISH512_BLOCK_WORDS ] = SYMM_THREEFISH512_CONSTANT_240 ^ \
-						   key_ptr[ 0 ] ^ key_ptr[ 1 ] ^ key_ptr[ 2 ] ^ key_ptr[ 3 ] ^ \
-						   key_ptr[ 4 ] ^ key_ptr[ 5 ] ^ key_ptr[ 6 ] ^ key_ptr[ 7 ]; \
-	twk_ptr[ 2 ] = twk_ptr[ 0 ] ^ twk_ptr[ 1 ]; \
-	SHIM_MACRO_SHIELD_EXIT
+	do { \
+		key_ptr[ SYMM_THREEFISH512_BLOCK_WORDS ] = SYMM_THREEFISH512_CONSTANT_240 ^ \
+							   key_ptr[ 0 ] ^ key_ptr[ 1 ] ^ key_ptr[ 2 ] ^ key_ptr[ 3 ] ^ \
+							   key_ptr[ 4 ] ^ key_ptr[ 5 ] ^ key_ptr[ 6 ] ^ key_ptr[ 7 ]; \
+		twk_ptr[ 2 ] = twk_ptr[ 0 ] ^ twk_ptr[ 1 ]; \
+	} while( 0 )
 
-void SHIM_PUBLIC
+void
 symm_threefish512_stored_rekey (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 			        uint64_t *                 SHIM_RESTRICT key,
 			        uint64_t *                 SHIM_RESTRICT twk)
@@ -18,7 +18,7 @@ symm_threefish512_stored_rekey (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 #define SET_WORD_(subkey, i) \
 	ctx->key_schedule[ ((subkey) * SYMM_THREEFISH512_BLOCK_WORDS) + i ] = MAKE_WORD_ (key, (subkey), i)
 #define MAKE_SUBKEY_(subkey) \
-	SHIM_MACRO_SHIELD \
+	do { \
 		SET_WORD_ (subkey, 0); \
 		SET_WORD_ (subkey, 1); \
 		SET_WORD_ (subkey, 2); \
@@ -27,14 +27,14 @@ symm_threefish512_stored_rekey (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 		SET_WORD_ (subkey, 5) + twk[ (subkey) % 3 ]; \
 		SET_WORD_ (subkey, 6) + twk[ ((subkey) + 1) % 3 ]; \
 		SET_WORD_ (subkey, 7) + (subkey); \
-	SHIM_MACRO_SHIELD_EXIT
+	} while( 0 )
 #define MAKE_4_SUBKEYS_(start_subkey) \
-	SHIM_MACRO_SHIELD \
+	do { \
 		MAKE_SUBKEY_ (start_subkey); \
 		MAKE_SUBKEY_ (start_subkey + 1); \
 		MAKE_SUBKEY_ (start_subkey + 2); \
 		MAKE_SUBKEY_ (start_subkey + 3); \
-	SHIM_MACRO_SHIELD_EXIT
+	} while( 0 )
 
 	INIT_KEYSCHEDULE_ (key, twk);
 
@@ -58,7 +58,7 @@ static int const Rotate_Constants [8][4] = {
 	{ 8, 35, 56, 22}
 };
 
-void SHIM_PUBLIC
+void
 symm_threefish512_stored_cipher (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 				 uint8_t *                  SHIM_RESTRICT ctext,
 				 uint8_t const *            SHIM_RESTRICT ptext)
@@ -66,10 +66,10 @@ symm_threefish512_stored_cipher (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 #define ROTATE_CONST_(round, index) \
 	(Rotate_Constants[ round % 8 ][ index ])
 #define MIX_(word_0, word_1, round, index) \
-	SHIM_MACRO_SHIELD \
+	do { \
 		word_0 += word_1; \
 		word_1 = SHIM_ROT_LEFT (word_1, ROTATE_CONST_ (round, index), 64) ^ word_0; \
-	SHIM_MACRO_SHIELD_EXIT
+	} while( 0 )
 #define DO_MIX_(round, index) \
 	MIX_ (ctx->state[ index * 2 ], ctx->state[ (index * 2) + 1 ], round, index);
 #define SUBKEY_INDEX_(round) \
@@ -77,7 +77,7 @@ symm_threefish512_stored_cipher (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 #define SUBKEY_OFFSET_(round) \
 	(SUBKEY_INDEX_ (round) * SYMM_THREEFISH512_BLOCK_WORDS)
 #define USE_SUBKEY_(operation, round) \
-	SHIM_MACRO_SHIELD \
+	do { \
 		ctx->state[ 0 ] operation ctx->key_schedule[ (SUBKEY_OFFSET_ (round) + 0) ]; \
 		ctx->state[ 1 ] operation ctx->key_schedule[ (SUBKEY_OFFSET_ (round) + 1) ]; \
 		ctx->state[ 2 ] operation ctx->key_schedule[ (SUBKEY_OFFSET_ (round) + 2) ]; \
@@ -86,9 +86,9 @@ symm_threefish512_stored_cipher (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 		ctx->state[ 5 ] operation ctx->key_schedule[ (SUBKEY_OFFSET_ (round) + 5) ]; \
 		ctx->state[ 6 ] operation ctx->key_schedule[ (SUBKEY_OFFSET_ (round) + 6) ]; \
 		ctx->state[ 7 ] operation ctx->key_schedule[ (SUBKEY_OFFSET_ (round) + 7) ]; \
-	SHIM_MACRO_SHIELD_EXIT
+	} while( 0 )
 #define PERMUTE_ \
-	SHIM_MACRO_SHIELD \
+	do { \
 		uint64_t w0, w1; \
 		w0 = ctx->state[ 6 ]; \
 		ctx->state[ 6 ] = ctx->state[ 0 ]; \
@@ -100,7 +100,7 @@ symm_threefish512_stored_cipher (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 		w0 = ctx->state[ 3 ]; \
 		ctx->state[ 3 ] = ctx->state[ 7 ]; \
 		ctx->state[ 7 ] = w0; \
-	SHIM_MACRO_SHIELD_EXIT
+	} while( 0 )
 
 #define MIX_PERM_(round) \
 	DO_MIX_ (round, 0); \
@@ -110,13 +110,13 @@ symm_threefish512_stored_cipher (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 	PERMUTE_
 
 #define ENC_ROUND_(round_start) \
-	SHIM_MACRO_SHIELD \
+	do { \
 		USE_SUBKEY_ (+=, round_start); \
 		MIX_PERM_ (round_start); \
 		MIX_PERM_ ((round_start + 1)); \
 		MIX_PERM_ ((round_start + 2)); \
 		MIX_PERM_ ((round_start + 3)); \
-	SHIM_MACRO_SHIELD_EXIT
+	} while( 0 )
 
 	SHIM_STATIC_ASSERT (sizeof(ctx->state) == SYMM_THREEFISH512_BLOCK_BYTES, "The state is one Threefish512 block.");
 	memcpy( ctx->state, ptext, sizeof(ctx->state) );
@@ -143,7 +143,7 @@ symm_threefish512_stored_cipher (Symm_Threefish512_Stored * SHIM_RESTRICT ctx,
 
 }// ~ symm_threefish512_stored_cipher(...)
 
-void SHIM_PUBLIC
+void
 symm_threefish512_ondemand_rekey (Symm_Threefish512_On_Demand * SHIM_RESTRICT ctx,
 				  uint64_t *                    SHIM_RESTRICT key,
 				  uint64_t *                    SHIM_RESTRICT twk)
@@ -153,14 +153,14 @@ symm_threefish512_ondemand_rekey (Symm_Threefish512_On_Demand * SHIM_RESTRICT ct
 	ctx->stored_tweak = twk;
 }// ~ symm_threefish512_ondemand_rekey(...)
 
-void SHIM_PUBLIC
+void
 symm_threefish512_ondemand_cipher (Symm_Threefish512_On_Demand * SHIM_RESTRICT ctx,
 				   uint8_t *                     SHIM_RESTRICT ctext,
 				   uint8_t const *               SHIM_RESTRICT ptext)
 {
 #undef  USE_SUBKEY_
 #define USE_SUBKEY_(operation, round) \
-	SHIM_MACRO_SHIELD \
+	do { \
 		ctx->state[ 0 ] operation (MAKE_WORD_ (ctx->stored_key, SUBKEY_INDEX_ (round), 0)); \
 		ctx->state[ 1 ] operation (MAKE_WORD_ (ctx->stored_key, SUBKEY_INDEX_ (round), 1)); \
 		ctx->state[ 2 ] operation (MAKE_WORD_ (ctx->stored_key, SUBKEY_INDEX_ (round), 2)); \
@@ -169,7 +169,7 @@ symm_threefish512_ondemand_cipher (Symm_Threefish512_On_Demand * SHIM_RESTRICT c
 		ctx->state[ 5 ] operation (MAKE_WORD_ (ctx->stored_key, SUBKEY_INDEX_ (round), 5) + ctx->stored_tweak[ (SUBKEY_INDEX_ (round) % 3) ]); \
 		ctx->state[ 6 ] operation (MAKE_WORD_ (ctx->stored_key, SUBKEY_INDEX_ (round), 6) + ctx->stored_tweak[ (SUBKEY_INDEX_ (round) + 1) % 3 ]); \
 		ctx->state[ 7 ] operation (MAKE_WORD_ (ctx->stored_key, SUBKEY_INDEX_ (round), 7) + SUBKEY_INDEX_ (round)); \
-	SHIM_MACRO_SHIELD_EXIT
+	} while( 0 )
 
 	static_assert (sizeof(ctx->state) == SYMM_THREEFISH512_BLOCK_BYTES, "The state is one Threefish512 block.");
 	memcpy( ctx->state, ptext, sizeof(ctx->state) );
@@ -195,8 +195,7 @@ symm_threefish512_ondemand_cipher (Symm_Threefish512_On_Demand * SHIM_RESTRICT c
 	memcpy( ctext, ctx->state, sizeof(ctx->state) );
 }// ~ symm_threefish512_ondemand_cipher(...)
 
-
-void SHIM_PUBLIC
+void
 symm_threefish512_ctr_setiv (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 			     uint8_t const *         SHIM_RESTRICT iv)
 {
@@ -208,7 +207,7 @@ symm_threefish512_ctr_setiv (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 		SYMM_THREEFISH512_CTR_IV_BYTES );
 }// ~ symm_threefish512_ctr_setiv(...)
 
-void SHIM_PUBLIC
+void
 symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 				uint8_t *                             output,
 				uint8_t const *                       input,
@@ -259,8 +258,3 @@ symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 		memcpy( output, ctx->buffer, input_size );
 	}
 }// ~ symm_threefish512_ctr_xorcrypt(...)
-
-
-
-
-

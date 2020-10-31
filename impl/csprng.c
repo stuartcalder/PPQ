@@ -1,6 +1,6 @@
 #include "csprng.h"
 
-void SHIM_PUBLIC
+void
 symm_csprng_reseed (Symm_CSPRNG *   SHIM_RESTRICT ctx,
 		    uint8_t const * SHIM_RESTRICT seed)
 {
@@ -16,7 +16,7 @@ symm_csprng_reseed (Symm_CSPRNG *   SHIM_RESTRICT ctx,
 				   sizeof(ctx->buffer) );
 	shim_secure_zero( ctx->buffer, sizeof(ctx->buffer) );
 }
-void SHIM_PUBLIC
+void
 symm_csprng_os_reseed (Symm_CSPRNG * ctx)
 {
 	SHIM_STATIC_ASSERT (sizeof(ctx->buffer) == (SYMM_THREEFISH512_BLOCK_BYTES * 2), "Wrong buffer size.");
@@ -31,7 +31,7 @@ symm_csprng_os_reseed (Symm_CSPRNG * ctx)
 				   sizeof(ctx->buffer) );
 	shim_secure_zero( ctx->buffer, sizeof(ctx->buffer) );
 }
-void SHIM_PUBLIC
+void
 symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
 		 uint8_t *     SHIM_RESTRICT output,
 		 uint64_t                    requested_bytes)

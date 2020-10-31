@@ -30,7 +30,7 @@
 	CLEANUP_MAP_ (output_map_ptr); \
 	CLEANUP_MAP_ (input_map_ptr)
 
-void SHIM_PUBLIC
+void
 symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_ptr,
 			   Shim_Map * const          SHIM_RESTRICT input_map_ptr,
 			   Shim_Map * const          SHIM_RESTRICT output_map_ptr,
@@ -166,7 +166,7 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 	CLEANUP_SUCCESS_ (dragonfly_v1_ptr->secret);
 
 }
-void SHIM_PUBLIC
+void
 symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_dcrypt_p,
 			   Shim_Map * const 		     SHIM_RESTRICT input_map_p,
 			   Shim_Map * const 		     SHIM_RESTRICT output_map_p,
@@ -320,7 +320,7 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 		CLEANUP_MAP_ (input_map_p);
 	}
 }
-void SHIM_PUBLIC
+void
 symm_dragonfly_v1_dump_header (Shim_Map * const SHIM_RESTRICT input_map_p,
 			       char const *     SHIM_RESTRICT filename)
 {
@@ -381,10 +381,3 @@ symm_dragonfly_v1_dump_header (Shim_Map * const SHIM_RESTRICT input_map_p,
 	shim_print_byte_buffer( mac, sizeof(mac) );
 	fputs( "\n", stdout );
 }
-
-
-
-
-
-
-

@@ -7,6 +7,7 @@
 #include <shim/operations.h>
 #include <shim/map.h>
 /* Symm Headers */
+#include "macros.h"
 #include "graph_hashing.h"
 #include "catena.h"
 #include "threefish512.h"
@@ -51,7 +52,7 @@ SHIM_ALIGNAS (uint64_t) static uint8_t const Symm_Dragonfly_V1_Strong_Metadata [
 	0xf3,0x26,0xeb,0x6f,0xa6,0xac,0xb0,0xa6
 };
 
-typedef struct SHIM_PUBLIC {
+typedef struct {
 	struct {
 		Symm_Catena_Input               catena_input;
 		Symm_Catena                     catena;
@@ -67,7 +68,7 @@ typedef struct SHIM_PUBLIC {
 		SHIM_ALIGNAS (uint64_t) uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
 	} pub;
 } Symm_Dragonfly_V1;
-typedef struct SHIM_PUBLIC {
+typedef struct {
 	Symm_Threefish512_CTR           threefish512_ctr;
 	Symm_UBI512                     ubi512;
 	Symm_Catena                     catena;
@@ -81,17 +82,17 @@ typedef struct SHIM_PUBLIC {
 
 SHIM_BEGIN_DECLS
 
-void SHIM_PUBLIC
+SYMM_API void
 symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_ptr,
 			   Shim_Map * const          SHIM_RESTRICT input_map_ptr,
 			   Shim_Map * const          SHIM_RESTRICT output_map_ptr,
 			   char const * const        SHIM_RESTRICT output_filename);
-void SHIM_PUBLIC
+SYMM_API void
 symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_dcrypt_p,
 			   Shim_Map * const                  SHIM_RESTRICT input_map_p,
 			   Shim_Map * const                  SHIM_RESTRICT output_map_p,
 			   char const * const                SHIM_RESTRICT output_fname);
-void SHIM_PUBLIC
+SYMM_API void
 symm_dragonfly_v1_dump_header (Shim_Map * const SHIM_RESTRICT input_map_ptr,
 			       char const *     SHIM_RESTRICT filename);
 

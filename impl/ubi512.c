@@ -19,7 +19,7 @@
 	memset( ctx_p->tweak_state, 0, SYMM_THREEFISH512_TWEAK_BYTES ); \
 	MODIFY_TWEAK_FLAGS_ (ctx_p, |=, (SYMM_UBI512_TWEAK_FIRST_BIT | init_bitwise_or))
 
-void SHIM_PUBLIC
+void
 symm_ubi512_chain_config (Symm_UBI512 * SHIM_RESTRICT ctx,
 			  uint64_t const              num_out_bits)
 {
@@ -40,7 +40,7 @@ symm_ubi512_chain_config (Symm_UBI512 * SHIM_RESTRICT ctx,
 		sizeof(num_out_bits) );
 	REKEY_CIPHER_XOR_ (ctx);
 }
-void SHIM_PUBLIC
+void
 symm_ubi512_chain_native_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 			         uint8_t *     SHIM_RESTRICT output)
 {
@@ -50,7 +50,7 @@ symm_ubi512_chain_native_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 	REKEY_CIPHER_XOR_ (ctx);
 	memcpy( output, ctx->key_state, SYMM_THREEFISH512_BLOCK_BYTES );
 }
-void SHIM_PUBLIC
+void
 symm_ubi512_chain_message (Symm_UBI512 *   SHIM_RESTRICT ctx,
 			   uint8_t const * SHIM_RESTRICT input,
 			   uint64_t                      num_in_bytes)
@@ -83,7 +83,7 @@ symm_ubi512_chain_message (Symm_UBI512 *   SHIM_RESTRICT ctx,
 	memset( (ctx->msg_state + num_in_bytes), 0, (sizeof(ctx->msg_state) - num_in_bytes) );
 	REKEY_CIPHER_XOR_ (ctx);
 }
-void SHIM_PUBLIC
+void
 symm_ubi512_chain_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 			  uint8_t *     SHIM_RESTRICT output,
 			  uint64_t                    num_out_bytes)
@@ -121,7 +121,7 @@ symm_ubi512_chain_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 	REKEY_CIPHER_XOR_ (ctx);
 	memcpy( output, ctx->key_state, num_out_bytes );
 }
-void SHIM_PUBLIC
+void
 symm_ubi512_chain_key (Symm_UBI512 *   SHIM_RESTRICT ctx,
 		       uint8_t const * SHIM_RESTRICT input)
 {

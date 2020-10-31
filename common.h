@@ -7,6 +7,7 @@
 #include <shim/map.h>
 #include <shim/mlock.h>
 /* Symm headers */
+#include "macros.h"
 #include "threefish512.h"
 #include "ubi512.h"
 #include "skein512.h"
@@ -41,7 +42,7 @@ enum {
 	SYMM_COMMON_PAD_MODE_TARGET
 };
 
-typedef struct SHIM_PUBLIC {
+typedef struct {
 #if (SYMM_COMMON_ENTROPY_BUFFER_BYTES > SYMM_COMMON_PASSWORD_BUFFER_BYTES)
 #	define CHECK_BUFFER_BYTES_	SYMM_COMMON_ENTROPY_BUFFER_BYTES
 #else

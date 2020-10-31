@@ -60,7 +60,7 @@ SHIM_ALIGNAS (uint64_t) static uint8_t const Use_Phi_Version_ID_Hash [64] = {
 };
 
 
-int SHIM_PUBLIC
+int
 symm_catena_nophi (Symm_Catena * SHIM_RESTRICT ctx,
 		   uint8_t *     SHIM_RESTRICT output,
 		   uint8_t *     SHIM_RESTRICT password,
@@ -110,7 +110,7 @@ symm_catena_nophi (Symm_Catena * SHIM_RESTRICT ctx,
 	COPY_HASH_WORD_(output, ctx->x_buffer);
 	return SYMM_CATENA_SUCCESS;
 }
-int SHIM_PUBLIC
+int
 symm_catena_usephi (Symm_Catena * SHIM_RESTRICT ctx,
 		    uint8_t *     SHIM_RESTRICT output,
 		    uint8_t *     SHIM_RESTRICT password,
@@ -166,7 +166,7 @@ void
 make_tweak_nophi_ (Symm_Catena * SHIM_RESTRICT ctx,
 		   uint8_t const               lambda)
 {
-	uint8_t *t = ctx->temp.tw_pw_salt;
+	uint8_t * t = ctx->temp.tw_pw_salt;
 	memcpy(t, No_Phi_Version_ID_Hash, SYMM_THREEFISH512_BLOCK_BYTES);
 	t += SYMM_THREEFISH512_BLOCK_BYTES;
 	(*t++) = SYMM_CATENA_DOMAIN_KDF;

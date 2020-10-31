@@ -4,6 +4,7 @@
 #include <shim/macros.h>
 #include <shim/operations.h>
 #include <shim/errors.h>
+#include "macros.h"
 #include "ubi512.h"
 #include "graph_hashing.h"
 
@@ -23,7 +24,7 @@
 #define SYMM_CATENA_DOMAIN_POW		UINT8_C (2)
 #define SYMM_CATENA_MHF_TEMP_BYTES	SYMM_GRAPH_HASHING_TEMP_BYTES
 
-typedef struct SHIM_PUBLIC {
+typedef struct {
 	Symm_UBI512                     ubi512_ctx;
 	uint8_t *	                graph_memory;
 	SHIM_ALIGNAS (uint64_t) uint8_t x_buffer [SYMM_THREEFISH512_BLOCK_BYTES];
@@ -43,7 +44,7 @@ typedef struct SHIM_PUBLIC {
 
 SHIM_BEGIN_DECLS
 
-int SHIM_PUBLIC
+SYMM_API int
 symm_catena_nophi (Symm_Catena * SHIM_RESTRICT ctx,
 		   uint8_t *     SHIM_RESTRICT output,
 		   uint8_t *     SHIM_RESTRICT password,
@@ -51,7 +52,7 @@ symm_catena_nophi (Symm_Catena * SHIM_RESTRICT ctx,
 		   uint8_t const               g_low,
 		   uint8_t const               g_high,
 		   uint8_t const               lambda);
-int SHIM_PUBLIC
+SYMM_API int
 symm_catena_usephi (Symm_Catena * SHIM_RESTRICT ctx,
 		    uint8_t *     SHIM_RESTRICT output,
 		    uint8_t *     SHIM_RESTRICT password,
