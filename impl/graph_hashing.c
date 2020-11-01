@@ -51,8 +51,3 @@ symm_graph_hash (Symm_UBI512 * SHIM_RESTRICT ubi512_ctx,
 		}
 	}
 }
-
-
-
-
-
