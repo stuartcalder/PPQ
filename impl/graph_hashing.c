@@ -1,8 +1,8 @@
 #include "graph_hashing.h"
 #include "skein512.h"
 
-#define INDEX_HASH_WORD_(ptr, index) \
-	(ptr + (index * SYMM_THREEFISH512_BLOCK_BYTES))
+#define INDEX_HASH_WORD_(u8_ptr, index) \
+	(u8_ptr + ((index) * SYMM_THREEFISH512_BLOCK_BYTES))
 #define COPY_HASH_WORD_(dest, src) \
 	memcpy( dest, src, SYMM_THREEFISH512_BLOCK_BYTES )
 #define HASH_TWO_WORDS_(ubi_ptr, dest, src) \

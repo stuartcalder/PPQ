@@ -20,7 +20,7 @@
 #define SYMM_THREEFISH512_EXTERNAL_KEY_WORDS	(SYMM_THREEFISH512_BLOCK_WORDS + 1)
 #define SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS	(SYMM_THREEFISH512_TWEAK_WORDS + 1)
 #define SYMM_THREEFISH512_CONSTANT_240		UINT64_C (0x1bd11bdaa9fc1a22)
-#define SYMM_THREEFISH512_CTR_IV_BYTES		(SYMM_THREEFISH512_BLOCK_BYTES / 2)
+#define SYMM_THREEFISH512_CTR_IV_BYTES		32
 
 typedef struct {
 	uint64_t key_schedule 	[SYMM_THREEFISH512_BLOCK_WORDS * SYMM_THREEFISH512_NUMBER_SUBKEYS];
@@ -28,16 +28,18 @@ typedef struct {
 } Symm_Threefish512_Stored;
 
 typedef struct {
-	uint64_t  state		[SYMM_THREEFISH512_BLOCK_WORDS];
-	uint64_t *stored_key;  //-> External key words
-	uint64_t *stored_tweak;//-> External tweak words
+	uint64_t   state	[SYMM_THREEFISH512_BLOCK_WORDS];
+	uint64_t * stored_key;   /* -> External key words  */
+	uint64_t * stored_tweak; /*-> External tweak words */
 } Symm_Threefish512_On_Demand;
 
+#define WORD_ALIGN_ SHIM_ALIGNAS (uint64_t)
 typedef struct {
-	Symm_Threefish512_Stored        threefish_stored; 
-	SHIM_ALIGNAS (uint64_t) uint8_t keystream [SYMM_THREEFISH512_BLOCK_BYTES];
-	SHIM_ALIGNAS (uint64_t) uint8_t buffer    [SYMM_THREEFISH512_BLOCK_BYTES];
+	Symm_Threefish512_Stored threefish_stored; 
+	WORD_ALIGN_ uint8_t	 keystream [SYMM_THREEFISH512_BLOCK_BYTES];
+	WORD_ALIGN_ uint8_t	 buffer    [SYMM_THREEFISH512_BLOCK_BYTES];
 } Symm_Threefish512_CTR;
+#undef WORD_ALIGN_
 
 SHIM_BEGIN_DECLS
 

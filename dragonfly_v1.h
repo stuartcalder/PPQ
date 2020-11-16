@@ -31,7 +31,8 @@
 #define SYMM_DRAGONFLY_V1_MAC_BYTES			SYMM_THREEFISH512_BLOCK_BYTES
 #define SYMM_DRAGONFLY_V1_VISIBLE_METADATA_BYTES	(SYMM_DRAGONFLY_V1_TOTAL_HEADER_BYTES + SYMM_DRAGONFLY_V1_MAC_BYTES)
 
-SHIM_ALIGNAS (uint64_t) static uint8_t const Symm_Dragonfly_V1_Safe_Metadata [SYMM_THREEFISH512_BLOCK_BYTES] = {
+#define WORD_ALIGN_ SHIM_ALIGNAS (uint64_t)
+WORD_ALIGN_ static uint8_t const Symm_Dragonfly_V1_Safe_Metadata [SYMM_THREEFISH512_BLOCK_BYTES] = {
 	0x79,0xb5,0x79,0x1e,0x9a,0xac,0x02,0x64,
 	0x2a,0xaa,0x99,0x1b,0xd5,0x47,0xed,0x14,
 	0x74,0x4d,0x72,0xbf,0x13,0x22,0x54,0xc9,
@@ -41,7 +42,7 @@ SHIM_ALIGNAS (uint64_t) static uint8_t const Symm_Dragonfly_V1_Safe_Metadata [SY
 	0x7c,0xf2,0x03,0x53,0xfd,0x42,0xa5,0xa3,
 	0x7a,0x0e,0xbb,0xb4,0xa7,0xeb,0xdb,0xab
 };
-SHIM_ALIGNAS (uint64_t) static uint8_t const Symm_Dragonfly_V1_Strong_Metadata [SYMM_THREEFISH512_BLOCK_BYTES] = {
+WORD_ALIGN_ static uint8_t const Symm_Dragonfly_V1_Strong_Metadata [SYMM_THREEFISH512_BLOCK_BYTES] = {
 	0x1f,0x23,0x89,0x58,0x4a,0x4a,0xbb,0xa5,
 	0x9f,0x09,0xca,0xd4,0xef,0xac,0x43,0x1d,
 	0xde,0x9a,0xb0,0xf8,0x69,0xaa,0x50,0xf3,
@@ -54,30 +55,30 @@ SHIM_ALIGNAS (uint64_t) static uint8_t const Symm_Dragonfly_V1_Strong_Metadata [
 
 typedef struct {
 	struct {
-		Symm_Catena_Input               catena_input;
-		Symm_Catena                     catena;
-		Symm_Threefish512_CTR           threefish512_ctr;
-		Symm_UBI512                     ubi512;
-		uint64_t                        enc_key  [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
-		SHIM_ALIGNAS (uint64_t) uint8_t auth_key [SYMM_THREEFISH512_BLOCK_BYTES];
-		SHIM_ALIGNAS (uint64_t) uint8_t hash_out [SYMM_THREEFISH512_BLOCK_BYTES * 2];
+		Symm_Catena_Input	catena_input;
+		Symm_Catena		catena;
+		Symm_Threefish512_CTR	threefish512_ctr;
+		Symm_UBI512		ubi512;
+		uint64_t		enc_key  [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
+		WORD_ALIGN_ uint8_t	auth_key [SYMM_THREEFISH512_BLOCK_BYTES];
+		WORD_ALIGN_ uint8_t	hash_out [SYMM_THREEFISH512_BLOCK_BYTES * 2];
 	} secret;
 	struct {
-		uint64_t                        tf_tweak    [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
-		SHIM_ALIGNAS (uint64_t) uint8_t ctr_iv      [SYMM_THREEFISH512_CTR_IV_BYTES];
-		SHIM_ALIGNAS (uint64_t) uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
+		uint64_t	    tf_tweak    [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
+		WORD_ALIGN_ uint8_t ctr_iv      [SYMM_THREEFISH512_CTR_IV_BYTES];
+		WORD_ALIGN_ uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
 	} pub;
 } Symm_Dragonfly_V1;
 typedef struct {
-	Symm_Threefish512_CTR           threefish512_ctr;
-	Symm_UBI512                     ubi512;
-	Symm_Catena                     catena;
-	uint64_t                        enc_key  [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
-	SHIM_ALIGNAS (uint64_t) uint8_t auth_key [SYMM_THREEFISH512_BLOCK_BYTES];
-	SHIM_ALIGNAS (uint64_t) uint8_t hash_buf [SYMM_THREEFISH512_BLOCK_BYTES * 2];
-	SHIM_ALIGNAS (uint64_t) uint8_t mac      [SYMM_COMMON_MAC_BYTES];
-	uint8_t                         password [SYMM_COMMON_PASSWORD_BUFFER_BYTES];
-	int                             password_size;
+	Symm_Threefish512_CTR	threefish512_ctr;
+	Symm_UBI512          	ubi512;
+	Symm_Catena          	catena;
+	uint64_t             	enc_key  [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
+	WORD_ALIGN_ uint8_t 	auth_key [SYMM_THREEFISH512_BLOCK_BYTES];
+	WORD_ALIGN_ uint8_t 	hash_buf [SYMM_THREEFISH512_BLOCK_BYTES * 2];
+	WORD_ALIGN_ uint8_t 	mac      [SYMM_COMMON_MAC_BYTES];
+	uint8_t              	password [SYMM_COMMON_PASSWORD_BUFFER_BYTES];
+	int                  	password_size;
 } Symm_Dragonfly_V1_Decrypt;
 
 SHIM_BEGIN_DECLS
@@ -97,8 +98,5 @@ symm_dragonfly_v1_dump_header (Shim_Map * const SHIM_RESTRICT input_map_ptr,
 			       char const *     SHIM_RESTRICT filename);
 
 SHIM_END_DECLS
-
-
-
-
+#undef WORD_ALIGN_
 #endif /* ~ SYMM_DRAGONFLY_V1_H */

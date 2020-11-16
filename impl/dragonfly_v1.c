@@ -5,16 +5,16 @@
 #include <inttypes.h>
 
 #ifdef SHIM_FEATURE_MEMORYLOCKING
-#	define LOCK_MEMORY_(address, size)	shim_lock_memory( address, size )
-#	define UNLOCK_MEMORY_(address, size)	shim_unlock_memory( address, size )
+#	define LOCK_MEMORY_(address, size)	shim_enforce_lock_memory( address, size )
+#	define UNLOCK_MEMORY_(address, size)	shim_enforce_unlock_memory( address, size )
 #else
 #	define LOCK_MEMORY_(nil_0, nil_1)	/* Nil */
 #	define UNLOCK_MEMORY_(nil_0, nil_1)	/* Nil */
 #endif
 
 #define CLEANUP_MAP_(shim_map_ptr) \
-	shim_unmap_memory( shim_map_ptr ); \
-	shim_close_file( shim_map_ptr->file )
+	shim_enforce_unmap_memory( shim_map_ptr ); \
+	shim_enforce_close_file( shim_map_ptr->file )
 
 #define CLEANUP_ERROR_(secret_data) \
 	shim_secure_zero( &secret_data, sizeof(secret_data) ); \
@@ -26,7 +26,7 @@
 #define CLEANUP_SUCCESS_(secret_data) \
 	shim_secure_zero( &secret_data, sizeof(secret_data) ); \
 	UNLOCK_MEMORY_ (&secret_data, sizeof(secret_data)); \
-	shim_sync_map( output_map_ptr ); \
+	shim_enforce_sync_map( output_map_ptr ); \
 	CLEANUP_MAP_ (output_map_ptr); \
 	CLEANUP_MAP_ (input_map_ptr)
 
@@ -39,8 +39,8 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 	{ /* Setup the output map. */
 		/* Assume the output file's size to be the plaintext size with a visible header. */
 		output_map_ptr->size = input_map_ptr->size + SYMM_DRAGONFLY_V1_VISIBLE_METADATA_BYTES + dragonfly_v1_ptr->secret.catena_input.padding_bytes;
-		shim_set_file_size( output_map_ptr->file, output_map_ptr->size );
-		shim_map_memory( output_map_ptr, false );
+		shim_enforce_set_file_size( output_map_ptr->file, output_map_ptr->size );
+		shim_enforce_map_memory( output_map_ptr, false );
 	}
 	LOCK_MEMORY_ (&dragonfly_v1_ptr->secret, sizeof(dragonfly_v1_ptr->secret));
 	Symm_Catena_Input *catena_input_ptr = &dragonfly_v1_ptr->secret.catena_input;
@@ -175,7 +175,7 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 	output_map_p->size = input_map_p->size - SYMM_DRAGONFLY_V1_VISIBLE_METADATA_BYTES;
 #define MINIMUM_POSSIBLE_FILE_SIZE_	(SYMM_DRAGONFLY_V1_VISIBLE_METADATA_BYTES + 1)
 	if( input_map_p->size < MINIMUM_POSSIBLE_FILE_SIZE_ ) {
-		shim_close_file( output_map_p->file );
+		shim_enforce_close_file( output_map_p->file );
 		remove( output_fname );
 #if 0
 		CLEANUP_ERROR_ (input_map_p);
@@ -211,9 +211,9 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 		in += SYMM_THREEFISH512_CTR_IV_BYTES;
 	}
 	if( memcmp( pub.header_id, SYMM_DRAGONFLY_V1_ID, sizeof(SYMM_DRAGONFLY_V1_ID) ) != 0 ) {
-		shim_unmap_memory( input_map_p );
-		shim_close_file( input_map_p->file );
-		shim_close_file( output_map_p->file );
+		shim_enforce_unmap_memory( input_map_p );
+		shim_enforce_close_file( input_map_p->file );
+		shim_enforce_close_file( output_map_p->file );
 		remove( output_fname );
 		SHIM_ERRX ("Error: Not a Dragonfly_V1 encryped file.\n");
 	}
@@ -234,7 +234,7 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 			shim_secure_zero( dfly_dcrypt_p, sizeof(*dfly_dcrypt_p) );
 			UNLOCK_MEMORY_ (dfly_dcrypt_p, sizeof(*dfly_dcrypt_p));
 			CLEANUP_MAP_ (input_map_p);
-			shim_close_file( output_map_p->file );
+			shim_enforce_close_file( output_map_p->file );
 			remove( output_fname );
 			SHIM_ERRX ("Error: Catena failed with error code %d...\nDo you have enough memory to decrypt this file?\n", ret);
 
@@ -256,7 +256,7 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 			shim_secure_zero( dfly_dcrypt_p, sizeof(*dfly_dcrypt_p) );
 			UNLOCK_MEMORY_ (dfly_dcrypt_p, sizeof(*dfly_dcrypt_p));
 			CLEANUP_MAP_ (input_map_p);
-			shim_close_file( output_map_p->file );
+			shim_enforce_close_file( output_map_p->file );
 			remove( output_fname );
 			SHIM_ERRX ("Error: Catena failed with error code %d...\nDo you have enough memory to decrypt this file?\n", ret);
 		}
@@ -282,11 +282,11 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 					   dfly_dcrypt_p->auth_key,
 					   input_map_p->size - SYMM_COMMON_MAC_BYTES,
 					   sizeof(dfly_dcrypt_p->mac) );
-			if( shim_ctime_memcmp( dfly_dcrypt_p->mac, (input_map_p->ptr + input_map_p->size - SYMM_COMMON_MAC_BYTES), SYMM_COMMON_MAC_BYTES ) != 0 ) {
+			if( shim_ctime_memdiff( dfly_dcrypt_p->mac, (input_map_p->ptr + input_map_p->size - SYMM_COMMON_MAC_BYTES), SYMM_COMMON_MAC_BYTES ) != 0 ) {
 				shim_secure_zero( dfly_dcrypt_p, sizeof(*dfly_dcrypt_p) );
 				UNLOCK_MEMORY_ (dfly_dcrypt_p, sizeof(*dfly_dcrypt_p));
 				CLEANUP_MAP_ (input_map_p);
-				shim_close_file( output_map_p->file );
+				shim_enforce_close_file( output_map_p->file );
 				remove( output_fname );
 				SHIM_ERRX ("Error: Authentication failed.\nPossibilities: Wrong password, the file is corrupted, or it has been tampered with.\n");
 			}
@@ -304,8 +304,8 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 							sizeof(padding_bytes),
 							0 );
 			output_map_p->size -= padding_bytes;
-			shim_set_file_size( output_map_p->file, output_map_p->size );
-			shim_map_memory( output_map_p, false );
+			shim_enforce_set_file_size( output_map_p->file, output_map_p->size );
+			shim_enforce_map_memory( output_map_p, false );
 			in += (padding_bytes + (sizeof(uint64_t) * 2));
 			symm_threefish512_ctr_xorcrypt( &dfly_dcrypt_p->threefish512_ctr,
 							output_map_p->ptr,
@@ -315,7 +315,7 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 		}
 		shim_secure_zero( dfly_dcrypt_p, sizeof(*dfly_dcrypt_p) );
 		UNLOCK_MEMORY_ (dfly_dcrypt_p, sizeof(*dfly_dcrypt_p));
-		shim_sync_map( output_map_p );
+		shim_enforce_sync_map( output_map_p );
 		CLEANUP_MAP_ (output_map_p);
 		CLEANUP_MAP_ (input_map_p);
 	}

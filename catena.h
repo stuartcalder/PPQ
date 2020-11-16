@@ -9,14 +9,10 @@
 #include "graph_hashing.h"
 
 #define SYMM_CATENA_SALT_BITS		256
-#define SYMM_CATENA_SALT_BYTES		(SYMM_CATENA_SALT_BITS / CHAR_BIT)
+#define SYMM_CATENA_SALT_BYTES		32
 #define SYMM_CATENA_MAX_PASSWORD_BYTES	120
 #define SYMM_CATENA_TWEAK_BYTES		(SYMM_THREEFISH512_BLOCK_BYTES + 1 + 1 + 2 + 2)
-#if    (SYMM_THREEFISH512_BLOCK_BYTES > SYMM_CATENA_SALT_BYTES)
-#	define SYMM_CATENA_RNG_BYTES	SYMM_THREEFISH512_BLOCK_BYTES
-#else
-#	define SYMM_CATENA_RNG_BYTES	SYMM_CATENA_SALT_BYTES
-#endif
+#define SYMM_CATENA_RNG_BYTES		SYMM_THREEFISH512_BLOCK_BYTES
 #define SYMM_CATENA_DOMAIN_PWSCRAMBLER	UINT8_C (0)
 #define SYMM_CATENA_DOMAIN_KDF		UINT8_C (1)
 #define SYMM_CATENA_DOMAIN_POW		UINT8_C (2)
@@ -27,20 +23,22 @@ enum {
 	SYMM_CATENA_ALLOC_FAILURE
 };
 
+#define WORD_ALIGN_ 		SHIM_ALIGNAS (uint64_t)
+
 typedef struct {
-	Symm_UBI512                     ubi512_ctx;
-	uint8_t *	                graph_memory;
-	SHIM_ALIGNAS (uint64_t) uint8_t x_buffer [SYMM_THREEFISH512_BLOCK_BYTES];
-	SHIM_ALIGNAS (uint64_t) uint8_t salt     [SYMM_CATENA_SALT_BYTES];
+	Symm_UBI512		ubi512_ctx;
+	uint8_t *		graph_memory;
+	WORD_ALIGN_ uint8_t	x_buffer [SYMM_THREEFISH512_BLOCK_BYTES];
+	WORD_ALIGN_ uint8_t	salt     [SYMM_CATENA_SALT_BYTES];
 	union {
-		uint8_t                         tw_pw_salt [SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_MAX_PASSWORD_BYTES + SYMM_CATENA_SALT_BYTES];
-		SHIM_ALIGNAS (uint64_t) uint8_t flap       [SYMM_THREEFISH512_BLOCK_BYTES * 3];
-		SHIM_ALIGNAS (uint64_t) uint8_t catena     [SYMM_THREEFISH512_BLOCK_BYTES + sizeof(uint8_t)];
-		SHIM_ALIGNAS (uint64_t) uint8_t phi        [SYMM_THREEFISH512_BLOCK_BYTES * 2];
-		SHIM_ALIGNAS (uint64_t) uint8_t mhf        [SYMM_CATENA_MHF_TEMP_BYTES];
+		uint8_t             tw_pw_salt	[SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_MAX_PASSWORD_BYTES + SYMM_CATENA_SALT_BYTES];
+		WORD_ALIGN_ uint8_t flap	[SYMM_THREEFISH512_BLOCK_BYTES * 3];
+		WORD_ALIGN_ uint8_t catena	[SYMM_THREEFISH512_BLOCK_BYTES + 1];
+		WORD_ALIGN_ uint8_t phi		[SYMM_THREEFISH512_BLOCK_BYTES * 2];
+		WORD_ALIGN_ uint8_t mhf		[SYMM_CATENA_MHF_TEMP_BYTES];
 		struct {
-			SHIM_ALIGNAS (uint64_t) uint8_t word_buf [SYMM_THREEFISH512_BLOCK_BYTES * 2];
-			SHIM_ALIGNAS (uint64_t) uint8_t rng      [SYMM_CATENA_RNG_BYTES];
+			WORD_ALIGN_ uint8_t word_buf [SYMM_THREEFISH512_BLOCK_BYTES * 2];
+			WORD_ALIGN_ uint8_t rng      [SYMM_CATENA_RNG_BYTES];
 		} gamma;
 	} temp;
 } Symm_Catena;
@@ -65,4 +63,5 @@ symm_catena_usephi (Symm_Catena * SHIM_RESTRICT ctx,
 		    uint8_t const               lambda);
 
 SHIM_END_DECLS
+#undef WORD_ALIGN_
 #endif // ~ SYMM_CATENA_H
