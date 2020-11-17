@@ -13,6 +13,11 @@ typedef struct {
 	WORD_ALIGN_ uint8_t	seed   [SYMM_THREEFISH512_BLOCK_BYTES];
 } Symm_CSPRNG;
 #undef WORD_ALIGN_
+#define SYMM_CSPRNG_NULL_INIT { \
+	.ubi512_ctx = SYMM_UBI512_NULL_INIT, \
+	.buffer = { 0 }, \
+	.seed = { 0 } \
+}
 
 SHIM_BEGIN_DECLS
 

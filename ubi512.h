@@ -25,6 +25,12 @@ typedef struct {
 	uint64_t                        tweak_state [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
 } Symm_UBI512;
 #undef WORD_ALIGN_
+#define SYMM_UBI512_NULL_INIT { \
+	.threefish_ctx = SYMM_THREEFISH512_ON_DEMAND_NULL_INIT, \
+	.key_state = { 0 }, \
+	.msg_state = { 0 }, \
+	.tweak_state = { 0 } \
+}
 
 SHIM_BEGIN_DECLS
 

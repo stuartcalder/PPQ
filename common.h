@@ -53,6 +53,19 @@ typedef struct {
 	uint8_t     use_phi;
 } Symm_Catena_Input;
 #undef CHECK_BUFFER_BYTES_
+#define SYMM_CATENA_INPUT_NULL_INIT { \
+	.csprng = SYMM_CSPRNG_NULL_INIT, \
+	.password_buffer = { 0 }, \
+	.check_buffer = { 0 }, \
+	.password_size = 0, \
+	.padding_bytes = 0, \
+	.padding_mode = 0, \
+	.supplement_entropy = false, \
+	.g_low = 0, \
+	.g_high = 0, \
+	.lambda = 0, \
+	.use_phi = 0 \
+}
 
 
 #endif /* ~ SYMM_COMMON_H */

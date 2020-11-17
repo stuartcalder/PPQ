@@ -69,6 +69,22 @@ typedef struct {
 		WORD_ALIGN_ uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
 	} pub;
 } Symm_Dragonfly_V1;
+#define SYMM_DRAGONFLY_V1_NULL_INIT { \
+	.secret = { \
+		.catena_input = SYMM_CATENA_INPUT_NULL_INIT, \
+		.catena = SYMM_CATENA_NULL_INIT, \
+		.threefish512_ctx = SYMM_THREEFISH512_CTR_NULL_INIT, \
+		.ubi512 = SYMM_UBI512_NULL_INIT, \
+		.enc_key = { 0 }, \
+		.auth_key = { 0 }, \
+		.hash_out = { 0 } \
+	}, \
+	.pub = { \
+		.tf_tweak = { 0 }, \
+		.ctr_iv = { 0 }, \
+		.catena_salt = { 0 } \
+	} \
+}
 typedef struct {
 	Symm_Threefish512_CTR	threefish512_ctr;
 	Symm_UBI512          	ubi512;
@@ -80,6 +96,17 @@ typedef struct {
 	uint8_t              	password [SYMM_COMMON_PASSWORD_BUFFER_BYTES];
 	int                  	password_size;
 } Symm_Dragonfly_V1_Decrypt;
+#define SYMM_DRAGONFLY_V1_DECRYPT_NULL_INIT { \
+	.threefish512_ctr = SYMM_THREEFISH512_CTR_NULL_INIT, \
+	.ubi512 = SYMM_UBI512_NULL_INIT, \
+	.catena = SYMM_CATENA_NULL_INIT, \
+	.enc_key = { 0 }, \
+	.auth_key = { 0 }, \
+	.hash_buf = { 0 }, \
+	.mac = { 0 }, \
+	.password = { 0 }, \
+	.password_size = 0 \
+}
 
 SHIM_BEGIN_DECLS
 
