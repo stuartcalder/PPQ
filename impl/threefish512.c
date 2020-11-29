@@ -253,7 +253,7 @@ symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 		symm_threefish512_stored_cipher( &ctx->threefish_stored,
 						 ctx->buffer,
 						 ctx->keystream );
-		for( uint64_t i = 0; i < input_size; ++i )
+		for( unsigned int i = 0; i < input_size; ++i )
 			ctx->buffer[ i ] ^= input[ i ];
 		memcpy( output, ctx->buffer, input_size );
 	}

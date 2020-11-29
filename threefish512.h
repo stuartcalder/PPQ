@@ -22,7 +22,7 @@
 #define SYMM_THREEFISH512_CONSTANT_240		UINT64_C (0x1bd11bdaa9fc1a22)
 #define SYMM_THREEFISH512_CTR_IV_BYTES		32
 
-typedef struct {
+typedef struct Symm_Threefish512_Stored_ {
 	uint64_t key_schedule 	[SYMM_THREEFISH512_BLOCK_WORDS * SYMM_THREEFISH512_NUMBER_SUBKEYS];
 	uint64_t state		[SYMM_THREEFISH512_BLOCK_WORDS];
 } Symm_Threefish512_Stored;
@@ -31,7 +31,7 @@ typedef struct {
 	.state = { 0 } \
 }
 
-typedef struct {
+typedef struct Symm_Threefish512_On_Demand_ {
 	uint64_t   state	[SYMM_THREEFISH512_BLOCK_WORDS];
 	uint64_t * stored_key;   /* -> External key words  */
 	uint64_t * stored_tweak; /*-> External tweak words */
@@ -43,7 +43,7 @@ typedef struct {
 }
 
 #define WORD_ALIGN_ SHIM_ALIGNAS (uint64_t)
-typedef struct {
+typedef struct Symm_Threefish512_CTR_ {
 	Symm_Threefish512_Stored threefish_stored; 
 	WORD_ALIGN_ uint8_t	 keystream [SYMM_THREEFISH512_BLOCK_BYTES];
 	WORD_ALIGN_ uint8_t	 buffer    [SYMM_THREEFISH512_BLOCK_BYTES];

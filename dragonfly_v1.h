@@ -53,7 +53,7 @@ WORD_ALIGN_ static uint8_t const Symm_Dragonfly_V1_Strong_Metadata [SYMM_THREEFI
 	0xf3,0x26,0xeb,0x6f,0xa6,0xac,0xb0,0xa6
 };
 
-typedef struct {
+typedef struct Symm_Dragonfly_V1_ {
 	struct {
 		Symm_Catena_Input	catena_input;
 		Symm_Catena		catena;
@@ -85,7 +85,7 @@ typedef struct {
 		.catena_salt = { 0 } \
 	} \
 }
-typedef struct {
+typedef struct Symm_Dragonfly_V1_Decrypt_ {
 	Symm_Threefish512_CTR	threefish512_ctr;
 	Symm_UBI512          	ubi512;
 	Symm_Catena          	catena;

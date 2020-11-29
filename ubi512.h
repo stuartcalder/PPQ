@@ -18,7 +18,7 @@
 #define SYMM_UBI512_TYPEMASK_OUT	UINT8_C (63)
 
 #define WORD_ALIGN_ SHIM_ALIGNAS (uint64_t)
-typedef struct {
+typedef struct Symm_UBI512_ {
 	Symm_Threefish512_On_Demand     threefish_ctx;
 	uint64_t                        key_state   [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
 	WORD_ALIGN_ uint8_t		msg_state   [SYMM_THREEFISH512_BLOCK_BYTES];
