@@ -1,2 +1,3 @@
-
 option('native_optimize', type: 'boolean', value: false)
+option('shim_static', type: 'boolean', value: false)
+option('static', type: 'boolean', value: false)

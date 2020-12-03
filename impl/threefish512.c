@@ -199,9 +199,10 @@ void
 symm_threefish512_ctr_setiv (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 			     uint8_t const *         SHIM_RESTRICT iv)
 {
+	SHIM_STATIC_ASSERT (SYMM_THREEFISH512_CTR_IV_BYTES == (SYMM_THREEFISH512_BLOCK_BYTES / 2), "Necessary to be half!");
 	memset( ctx->keystream + sizeof(uint64_t),
 		0,
-		SYMM_THREEFISH512_CTR_IV_BYTES - sizeof(uint64_t) );
+		(SYMM_THREEFISH512_CTR_IV_BYTES - sizeof(uint64_t)) );
 	memcpy( ctx->keystream + SYMM_THREEFISH512_CTR_IV_BYTES,
 		iv,
 		SYMM_THREEFISH512_CTR_IV_BYTES );
