@@ -82,7 +82,7 @@ elif os == 'windows'
 endif
 
 if os == 'openbsd' or os == 'freebsd' or os == 'darwin'
-  lib_deps += compiler.find_library('shim', static: shim_static)
+  lib_deps += compiler.find_library('shim', static: shim_static, dirs: '/usr/local/lib')
 elif os == 'netbsd'
   lib_deps += compiler.find_library('shim', static: shim_static)
 elif os == 'linux'

@@ -53,6 +53,8 @@ symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
 		 uint8_t *     SHIM_RESTRICT output,
 		 uint64_t                    requested_bytes)
 {
+	if( !requested_bytes )
+		return;
 	while( requested_bytes > SYMM_THREEFISH512_BLOCK_BYTES ) {
 		SKEIN_PRE_ ((&ctx->ubi512_ctx),
 			    ctx->buffer,

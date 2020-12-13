@@ -49,6 +49,3 @@ symm_skein512_mac (Symm_UBI512 *   SHIM_RESTRICT ubi512_ctx,
 	symm_ubi512_chain_message( ubi512_ctx, bytes_in, num_bytes_in );
 	symm_ubi512_chain_output( ubi512_ctx, bytes_out, num_bytes_out );
 }
-
-
-
