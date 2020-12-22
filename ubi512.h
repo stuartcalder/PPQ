@@ -19,10 +19,10 @@
 
 #define WORD_ALIGN_ SHIM_ALIGNAS (uint64_t)
 typedef struct Symm_UBI512_ {
-	Symm_Threefish512_On_Demand     threefish_ctx;
-	uint64_t                        key_state   [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
-	WORD_ALIGN_ uint8_t		msg_state   [SYMM_THREEFISH512_BLOCK_BYTES];
-	uint64_t                        tweak_state [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
+	Symm_Threefish512_On_Demand threefish_ctx;
+	uint64_t                    key_state   [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
+	WORD_ALIGN_ uint8_t	    msg_state   [SYMM_THREEFISH512_BLOCK_BYTES];
+	uint64_t                    tweak_state [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
 } Symm_UBI512;
 #undef WORD_ALIGN_
 #define SYMM_UBI512_NULL_INIT { \

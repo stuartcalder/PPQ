@@ -120,7 +120,7 @@ symm_catena_usephi (Symm_Catena * SHIM_RESTRICT ctx,
 		    uint8_t const               lambda)
 {
 	/* Allocate the graph memory. Free it at the end of the procedure; return on alloc failure. */
-	ctx->graph_memory = (uint8_t *)malloc( (UINT64_C (1) << g_high) * SYMM_THREEFISH512_BLOCK_BYTES );
+	ctx->graph_memory = (uint8_t *)malloc( (UINT64_C (1) << (g_high + 6)) );
 	if( !ctx->graph_memory )
 		return SYMM_CATENA_ALLOC_FAILURE;
 	/* Construct the tweak; concatenation with password and salt and hash into the x buffer. */
@@ -154,8 +154,7 @@ symm_catena_usephi (Symm_Catena * SHIM_RESTRICT ctx,
 					   sizeof(ctx->temp.catena) );
 	}
 	/* Zero over and free the memory. Copy the buffer out of the procedure. */
-	shim_secure_zero( ctx->graph_memory,
-			  ((UINT64_C (1) << g_high) * SYMM_THREEFISH512_BLOCK_BYTES) );
+	shim_secure_zero( ctx->graph_memory, (UINT64_C (1) << (g_high + 6)) );
 	free( ctx->graph_memory );
 	COPY_HASH_WORD_ (output, ctx->x_buffer);
 	return SYMM_CATENA_SUCCESS;
@@ -378,7 +377,7 @@ gamma_ (Symm_Catena * SHIM_RESTRICT ctx,
 	uint64_t const count = (UINT64_C (1) << (((3 * garlic) + 3) / 4));
 	int const right_shift_amt = 64 - garlic;
 	for( uint64_t i = 0; i < count; ++i ) {
-		SHIM_ALIGNAS (uint64_t) static uint8_t const Config [64] = {
+		SHIM_ALIGNAS (uint64_t) static uint8_t const Config [SYMM_THREEFISH512_BLOCK_BYTES] = {
 			0xf0, 0xef, 0xcb, 0xca, 0xbf, 0xd0, 0x04, 0x7b,
 			0xc0, 0x5d, 0x3e, 0x3a, 0x1d, 0x53, 0xe4, 0x9f,
 			0x07, 0xbf, 0x4f, 0xf5, 0xce, 0x67, 0x53, 0x53,

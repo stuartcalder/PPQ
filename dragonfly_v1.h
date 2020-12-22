@@ -111,10 +111,10 @@ typedef struct Symm_Dragonfly_V1_Decrypt_ {
 SHIM_BEGIN_DECLS
 
 SYMM_API void
-symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_ptr,
-			   Shim_Map * const          SHIM_RESTRICT input_map_ptr,
-			   Shim_Map * const          SHIM_RESTRICT output_map_ptr,
-			   char const * const        SHIM_RESTRICT output_filename);
+symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 * SHIM_RESTRICT dragonfly_v1_ptr,
+			   Shim_Map * const    SHIM_RESTRICT input_map_ptr,
+			   Shim_Map * const    SHIM_RESTRICT output_map_ptr,
+			   char const * const  SHIM_RESTRICT output_filename);
 SYMM_API void
 symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_dcrypt_p,
 			   Shim_Map * const                  SHIM_RESTRICT input_map_p,

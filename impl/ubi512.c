@@ -77,7 +77,7 @@ symm_ubi512_chain_message (Symm_UBI512 *   SHIM_RESTRICT ctx,
 		num_in_bytes -= SYMM_THREEFISH512_BLOCK_BYTES;
 		input        += SYMM_THREEFISH512_BLOCK_BYTES;
 	}
-	MODIFY_TWEAK_FLAGS_ (ctx, |=, SYMM_UBI512_TWEAK_LAST_BIT);
+	MODIFY_TWEAK_FLAGS_    (ctx, |=, SYMM_UBI512_TWEAK_LAST_BIT);
 	MODIFY_TWEAK_POSITION_ (ctx, +=, num_in_bytes);
 	memcpy( ctx->msg_state, input, num_in_bytes );
 	memset( (ctx->msg_state + num_in_bytes), 0, (sizeof(ctx->msg_state) - num_in_bytes) );

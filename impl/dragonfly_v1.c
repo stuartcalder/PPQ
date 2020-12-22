@@ -58,10 +58,10 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 		shim_secure_zero( csprng_p, sizeof(*csprng_p) );
 	}
 	{
+		memcpy( dragonfly_v1_ptr->secret.catena.salt,
+			dragonfly_v1_ptr->pub.catena_salt,
+			sizeof(dragonfly_v1_ptr->pub.catena_salt) );
 		if( !catena_input_ptr->use_phi ) {
-			memcpy( dragonfly_v1_ptr->secret.catena.salt,
-				dragonfly_v1_ptr->pub.catena_salt,
-				sizeof(dragonfly_v1_ptr->pub.catena_salt) );
 			int ret = symm_catena_nophi( &dragonfly_v1_ptr->secret.catena,
 						     dragonfly_v1_ptr->secret.hash_out,
 						     catena_input_ptr->password_buffer,
@@ -77,9 +77,6 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 			}
 			shim_secure_zero( &dragonfly_v1_ptr->secret.catena, sizeof(dragonfly_v1_ptr->secret.catena) );
 		} else {
-			memcpy( dragonfly_v1_ptr->secret.catena.salt,
-				dragonfly_v1_ptr->pub.catena_salt,
-				sizeof(dragonfly_v1_ptr->pub.catena_salt) );
 			int ret = symm_catena_usephi( &dragonfly_v1_ptr->secret.catena,
 						      dragonfly_v1_ptr->secret.hash_out,
 						      catena_input_ptr->password_buffer,
@@ -140,7 +137,7 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 						sizeof(crypt_header),
 						0 );
 		out += sizeof(crypt_header);
-		if( catena_input_ptr->padding_bytes != 0 ) {
+		if( catena_input_ptr->padding_bytes ) {
 			symm_threefish512_ctr_xorcrypt( &dragonfly_v1_ptr->secret.threefish512_ctr,
 							out,
 							out,
@@ -210,7 +207,7 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 		memcpy( pub.ctr_iv, in, SYMM_THREEFISH512_CTR_IV_BYTES );
 		in += SYMM_THREEFISH512_CTR_IV_BYTES;
 	}
-	if( memcmp( pub.header_id, SYMM_DRAGONFLY_V1_ID, sizeof(SYMM_DRAGONFLY_V1_ID) ) != 0 ) {
+	if( memcmp( pub.header_id, SYMM_DRAGONFLY_V1_ID, sizeof(SYMM_DRAGONFLY_V1_ID) ) ) {
 		shim_enforce_unmap_memory( input_map_p );
 		shim_enforce_close_file( input_map_p->file );
 		shim_enforce_close_file( output_map_p->file );
@@ -218,11 +215,11 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 		SHIM_ERRX ("Error: Not a Dragonfly_V1 encryped file.\n");
 	}
 	LOCK_MEMORY_ (dfly_dcrypt_p, sizeof(*dfly_dcrypt_p) );
+	memcpy( dfly_dcrypt_p->catena.salt,
+		pub.catena_salt,
+		sizeof(pub.catena_salt) );
 	if( !pub.use_phi ) {
 		SHIM_STATIC_ASSERT (sizeof(pub.catena_salt) == sizeof(dfly_dcrypt_p->catena.salt), "These must be the same size.");
-		memcpy( dfly_dcrypt_p->catena.salt,
-			pub.catena_salt,
-			sizeof(pub.catena_salt) );
 		int ret = symm_catena_nophi( &dfly_dcrypt_p->catena,
 					     dfly_dcrypt_p->hash_buf,
 					     dfly_dcrypt_p->password,
@@ -241,9 +238,6 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 		}
 		shim_secure_zero( &dfly_dcrypt_p->catena, sizeof(dfly_dcrypt_p->catena) );
 	} else {
-		memcpy( dfly_dcrypt_p->catena.salt,
-			pub.catena_salt,
-			sizeof(pub.catena_salt) );
 		int ret = symm_catena_usephi( &dfly_dcrypt_p->catena,
 					      dfly_dcrypt_p->hash_buf,
 					      dfly_dcrypt_p->password,
@@ -282,7 +276,7 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 					   dfly_dcrypt_p->auth_key,
 					   input_map_p->size - SYMM_COMMON_MAC_BYTES,
 					   sizeof(dfly_dcrypt_p->mac) );
-			if( shim_ctime_memdiff( dfly_dcrypt_p->mac, (input_map_p->ptr + input_map_p->size - SYMM_COMMON_MAC_BYTES), SYMM_COMMON_MAC_BYTES ) != 0 ) {
+			if( shim_ctime_memdiff( dfly_dcrypt_p->mac, (input_map_p->ptr + input_map_p->size - SYMM_COMMON_MAC_BYTES), SYMM_COMMON_MAC_BYTES ) ) {
 				shim_secure_zero( dfly_dcrypt_p, sizeof(*dfly_dcrypt_p) );
 				UNLOCK_MEMORY_ (dfly_dcrypt_p, sizeof(*dfly_dcrypt_p));
 				CLEANUP_MAP_ (input_map_p);
@@ -303,15 +297,16 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 							in,
 							sizeof(padding_bytes),
 							0 );
+			uint64_t const step = padding_bytes + (sizeof(uint64_t) * 2);
 			output_map_p->size -= padding_bytes;
 			shim_enforce_set_file_size( output_map_p->file, output_map_p->size );
 			shim_enforce_map_memory( output_map_p, false );
-			in += (padding_bytes + (sizeof(uint64_t) * 2));
+			in += step;
 			symm_threefish512_ctr_xorcrypt( &dfly_dcrypt_p->threefish512_ctr,
 							output_map_p->ptr,
 							in,
 							output_map_p->size,
-							(sizeof(uint64_t) * 2) + padding_bytes );
+							step );
 		}
 		shim_secure_zero( dfly_dcrypt_p, sizeof(*dfly_dcrypt_p) );
 		UNLOCK_MEMORY_ (dfly_dcrypt_p, sizeof(*dfly_dcrypt_p));

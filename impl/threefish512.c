@@ -215,7 +215,7 @@ symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 				uint64_t                              input_size,
 				uint64_t                              starting_byte)
 {
-	if( starting_byte == 0 ) {
+	if( !starting_byte ) {
 		memset( ctx->keystream, 0, sizeof(uint64_t) );
 	} else {
 		uint64_t starting_block = starting_byte / SYMM_THREEFISH512_BLOCK_BYTES;
