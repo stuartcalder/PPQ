@@ -26,6 +26,11 @@ symm_csprng_init (Symm_CSPRNG * ctx) {
 	shim_obtain_os_entropy( ctx->seed, sizeof(ctx->seed) );
 }
 
+static inline void
+symm_csprng_delete (Symm_CSPRNG * ctx) {
+	shim_secure_zero( ctx, sizeof(*ctx) );
+}
+
 SYMM_API void
 symm_csprng_reseed (Symm_CSPRNG *   SHIM_RESTRICT ctx,
 		    uint8_t const * SHIM_RESTRICT seed);

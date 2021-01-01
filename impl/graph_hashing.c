@@ -35,8 +35,13 @@ symm_graph_hash (Symm_UBI512 * SHIM_RESTRICT ubi512_ctx,
 	for( uint8_t j = 1; j <= lambda; ++j ) {
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (temp, 0),
 				 INDEX_HASH_WORD_ (graph_memory, garlic_end));
+		#if 0
 		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (temp, 1),
 				 INDEX_HASH_WORD_ (graph_memory, bit_reversal_index_( UINT64_C (0), garlic )));
+		#else
+		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (temp, 1),
+				 INDEX_HASH_WORD_ (graph_memory, 0));
+		#endif
 		HASH_TWO_WORDS_ (ubi512_ctx,
 				 INDEX_HASH_WORD_ (graph_memory, 0),
 				 INDEX_HASH_WORD_ (temp, 0));

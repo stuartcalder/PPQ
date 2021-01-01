@@ -70,7 +70,7 @@ symm_catena_nophi (Symm_Catena * SHIM_RESTRICT ctx,
 		   uint8_t const               lambda)
 {
 	/* Allocate the graph memory. Free it at the end of the procedure; return on alloc failure. */
-	uint64_t const allocated_bytes = (UINT64_C (1) << g_high) * SYMM_THREEFISH512_BLOCK_BYTES;
+	uint64_t const allocated_bytes = (UINT64_C (1) << (g_high + 6));
 	ctx->graph_memory = (uint8_t *)malloc( allocated_bytes );
 	if( !ctx->graph_memory )
 		return SYMM_CATENA_ALLOC_FAILURE;
@@ -174,9 +174,8 @@ make_tweak_nophi_ (Symm_Catena * SHIM_RESTRICT ctx,
 	{
 		uint16_t tmp = SYMM_THREEFISH512_BLOCK_BYTES;
 		memcpy( t, &tmp, sizeof(tmp) );
-		t += sizeof(tmp);
 		tmp = SYMM_CATENA_SALT_BYTES;
-		memcpy( t, &tmp, sizeof(tmp) );
+		memcpy( t + sizeof(tmp), &tmp, sizeof(tmp) );
 	}
 }
 void
@@ -191,9 +190,8 @@ make_tweak_usephi_ (Symm_Catena * SHIM_RESTRICT ctx,
 	{
 		uint16_t tmp = SYMM_THREEFISH512_BLOCK_BYTES;
 		memcpy( t, &tmp, sizeof(tmp) );
-		t += sizeof(tmp);
 		tmp = SYMM_CATENA_SALT_BYTES;
-		memcpy( t, &tmp, sizeof(tmp) );
+		memcpy( t + sizeof(tmp), &tmp, sizeof(tmp) );
 	}
 }
 void

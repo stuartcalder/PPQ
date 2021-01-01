@@ -40,6 +40,7 @@ symm_ubi512_chain_config (Symm_UBI512 * SHIM_RESTRICT ctx,
 		sizeof(num_out_bits) );
 	REKEY_CIPHER_XOR_ (ctx);
 }
+
 void
 symm_ubi512_chain_native_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 			         uint8_t *     SHIM_RESTRICT output)
@@ -50,6 +51,7 @@ symm_ubi512_chain_native_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 	REKEY_CIPHER_XOR_ (ctx);
 	memcpy( output, ctx->key_state, SYMM_THREEFISH512_BLOCK_BYTES );
 }
+
 void
 symm_ubi512_chain_message (Symm_UBI512 *   SHIM_RESTRICT ctx,
 			   uint8_t const * SHIM_RESTRICT input,
@@ -83,6 +85,7 @@ symm_ubi512_chain_message (Symm_UBI512 *   SHIM_RESTRICT ctx,
 	memset( (ctx->msg_state + num_in_bytes), 0, (sizeof(ctx->msg_state) - num_in_bytes) );
 	REKEY_CIPHER_XOR_ (ctx);
 }
+
 void
 symm_ubi512_chain_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 			  uint8_t *     SHIM_RESTRICT output,
@@ -121,6 +124,7 @@ symm_ubi512_chain_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 	REKEY_CIPHER_XOR_ (ctx);
 	memcpy( output, ctx->key_state, num_out_bytes );
 }
+
 void
 symm_ubi512_chain_key (Symm_UBI512 *   SHIM_RESTRICT ctx,
 		       uint8_t const * SHIM_RESTRICT input)
@@ -130,4 +134,3 @@ symm_ubi512_chain_key (Symm_UBI512 *   SHIM_RESTRICT ctx,
 	memcpy( ctx->msg_state, input, SYMM_THREEFISH512_BLOCK_BYTES );
 	REKEY_CIPHER_XOR_ (ctx);
 }
-

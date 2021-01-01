@@ -31,10 +31,10 @@
 	CLEANUP_MAP_ (input_map_ptr)
 
 void
-symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_ptr,
-			   Shim_Map * const          SHIM_RESTRICT input_map_ptr,
-			   Shim_Map * const          SHIM_RESTRICT output_map_ptr,
-			   char const * const        SHIM_RESTRICT output_filename)
+symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 * SHIM_RESTRICT dragonfly_v1_ptr,
+			   Shim_Map * const    SHIM_RESTRICT input_map_ptr,
+			   Shim_Map * const    SHIM_RESTRICT output_map_ptr,
+			   char const * const  SHIM_RESTRICT output_filename)
 {
 	{ /* Setup the output map. */
 		/* Assume the output file's size to be the plaintext size with a visible header. */
@@ -45,7 +45,7 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 	LOCK_MEMORY_ (&dragonfly_v1_ptr->secret, sizeof(dragonfly_v1_ptr->secret));
 	Symm_Catena_Input *catena_input_ptr = &dragonfly_v1_ptr->secret.catena_input;
 	{
-		Symm_CSPRNG *csprng_p = &catena_input_ptr->csprng;
+		Symm_CSPRNG * csprng_p = &catena_input_ptr->csprng;
 		symm_csprng_get( csprng_p,
 				 (uint8_t *)dragonfly_v1_ptr->pub.tf_tweak,
 				 SYMM_THREEFISH512_TWEAK_BYTES );
@@ -55,44 +55,42 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 		symm_csprng_get( csprng_p,
 				 dragonfly_v1_ptr->pub.catena_salt,
 				 sizeof(dragonfly_v1_ptr->pub.catena_salt) );
-		shim_secure_zero( csprng_p, sizeof(*csprng_p) );
+		symm_csprng_delete( csprng_p );
 	}
 	{
 		memcpy( dragonfly_v1_ptr->secret.catena.salt,
 			dragonfly_v1_ptr->pub.catena_salt,
 			sizeof(dragonfly_v1_ptr->pub.catena_salt) );
+
+		int catena_status;
 		if( !catena_input_ptr->use_phi ) {
-			int ret = symm_catena_nophi( &dragonfly_v1_ptr->secret.catena,
-						     dragonfly_v1_ptr->secret.hash_out,
-						     catena_input_ptr->password_buffer,
-						     catena_input_ptr->password_size,
-						     catena_input_ptr->g_low,
-						     catena_input_ptr->g_high,
-						     catena_input_ptr->lambda );
-			switch( ret ) {
-				case SYMM_CATENA_ALLOC_FAILURE:
-					CLEANUP_ERROR_ (dragonfly_v1_ptr->secret);
-					SHIM_ERRX ("Error: Catena failed with error code %d...\nAllocating too much memory?\n", ret);
-					break;
-			}
-			shim_secure_zero( &dragonfly_v1_ptr->secret.catena, sizeof(dragonfly_v1_ptr->secret.catena) );
+			catena_status = symm_catena_nophi( &dragonfly_v1_ptr->secret.catena,
+							   dragonfly_v1_ptr->secret.hash_out,
+							   catena_input_ptr->password_buffer,
+							   catena_input_ptr->password_size,
+							   catena_input_ptr->g_low,
+							   catena_input_ptr->g_high,
+							   catena_input_ptr->lambda );
 		} else {
-			int ret = symm_catena_usephi( &dragonfly_v1_ptr->secret.catena,
-						      dragonfly_v1_ptr->secret.hash_out,
-						      catena_input_ptr->password_buffer,
-						      catena_input_ptr->password_size,
-						      catena_input_ptr->g_low,
-						      catena_input_ptr->g_high,
-						      catena_input_ptr->lambda );
-			switch( ret ) {
-				case SYMM_CATENA_ALLOC_FAILURE:
-					CLEANUP_ERROR_ (dragonfly_v1_ptr->secret);
-					SHIM_ERRX ("Error: Catena failed with error code %d...\nAllocating too much memory?\n", ret);
-					break;
-			}
-			shim_secure_zero( &dragonfly_v1_ptr->secret.catena, sizeof(dragonfly_v1_ptr->secret.catena) );
+			catena_status = symm_catena_usephi( &dragonfly_v1_ptr->secret.catena,
+							    dragonfly_v1_ptr->secret.hash_out,
+							    catena_input_ptr->password_buffer,
+							    catena_input_ptr->password_size,
+							    catena_input_ptr->g_low,
+							    catena_input_ptr->g_high,
+							    catena_input_ptr->lambda );
 		}
+		switch( catena_status ) {
+			case SYMM_CATENA_ALLOC_FAILURE: {
+				CLEANUP_ERROR_ (dragonfly_v1_ptr->secret);
+				SHIM_ERRX ("Error: Catena failed with error code %d...\nAllocating too much memory?\n", catena_status);
+			} break;
+		}
+		shim_secure_zero( &dragonfly_v1_ptr->secret.catena , sizeof(dragonfly_v1_ptr->secret.catena)   );
 		shim_secure_zero( catena_input_ptr->password_buffer, sizeof(catena_input_ptr->password_buffer) );
+		/* CATENA will output 512 bits. We will hash these 512 bits into 1024 output bits using Skein,
+		 * and use the first 512 bits as the encryption key, and the second 512 bits as the authentication key.
+		 */
 		symm_skein512_hash( &dragonfly_v1_ptr->secret.ubi512,
 				    dragonfly_v1_ptr->secret.hash_out,
 				    dragonfly_v1_ptr->secret.hash_out,
@@ -106,12 +104,14 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 		memcpy( dragonfly_v1_ptr->secret.auth_key,
 			dragonfly_v1_ptr->secret.hash_out + SYMM_THREEFISH512_BLOCK_BYTES,
 			SYMM_THREEFISH512_BLOCK_BYTES );
+		/* Scrub the hash buffer and re-key the 'stored' Threefish cipher variant.
+		 */
 		shim_secure_zero( dragonfly_v1_ptr->secret.hash_out, sizeof(dragonfly_v1_ptr->secret.hash_out) );
 		symm_threefish512_stored_rekey( &dragonfly_v1_ptr->secret.threefish512_ctr.threefish_stored,
 						dragonfly_v1_ptr->secret.enc_key,
 						dragonfly_v1_ptr->pub.tf_tweak );
 	}
-	uint8_t *out = output_map_ptr->ptr;
+	uint8_t * out = output_map_ptr->ptr;
 	memcpy( out, SYMM_DRAGONFLY_V1_ID, sizeof(SYMM_DRAGONFLY_V1_ID) );
 	out += sizeof(SYMM_DRAGONFLY_V1_ID);
 	memcpy( out, &output_map_ptr->size, sizeof(output_map_ptr->size) );
@@ -161,8 +161,8 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 *       SHIM_RESTRICT dragonfly_v1_
 				   SYMM_COMMON_MAC_BYTES );
 	}
 	CLEANUP_SUCCESS_ (dragonfly_v1_ptr->secret);
-
 }
+
 void
 symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_dcrypt_p,
 			   Shim_Map * const 		     SHIM_RESTRICT input_map_p,
