@@ -1,23 +1,18 @@
 #ifndef SYMM_CSPRNG_H
 #define SYMM_CSPRNG_H
 
+#include "macros.h"
+#include "skein512.h"
 #include <shim/macros.h>
 #include <shim/operations.h>
-#include "skein512.h"
-#include "macros.h"
 
 #define WORD_ALIGN_ SHIM_ALIGNAS (uint64_t)
 typedef struct Symm_CSPRNG_ {
-	Symm_UBI512		ubi512_ctx;
-	WORD_ALIGN_ uint8_t	buffer [SYMM_THREEFISH512_BLOCK_BYTES * 2];
-	WORD_ALIGN_ uint8_t	seed   [SYMM_THREEFISH512_BLOCK_BYTES];
+	Symm_UBI512	    ubi512_ctx;
+	WORD_ALIGN_ uint8_t buffer [SYMM_THREEFISH512_BLOCK_BYTES * 2];
+	WORD_ALIGN_ uint8_t seed   [SYMM_THREEFISH512_BLOCK_BYTES];
 } Symm_CSPRNG;
 #undef WORD_ALIGN_
-#define SYMM_CSPRNG_NULL_INIT { \
-	.ubi512_ctx = SYMM_UBI512_NULL_INIT, \
-	.buffer = { 0 }, \
-	.seed = { 0 } \
-}
 
 SHIM_BEGIN_DECLS
 

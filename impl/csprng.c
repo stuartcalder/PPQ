@@ -55,8 +55,9 @@ symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
 {
 	if( !requested_bytes )
 		return;
+	Symm_UBI512 * ubi_p = &ctx->ubi512_ctx;
 	while( requested_bytes > SYMM_THREEFISH512_BLOCK_BYTES ) {
-		SKEIN_PRE_ ((&ctx->ubi512_ctx),
+		SKEIN_PRE_ (ubi_p,
 			    ctx->buffer,
 			    ctx->seed,
 			    sizeof(ctx->seed),
@@ -70,7 +71,7 @@ symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
 		output          += SYMM_THREEFISH512_BLOCK_BYTES;
 		requested_bytes -= SYMM_THREEFISH512_BLOCK_BYTES;
 	}
-	SKEIN_PRE_ ((&ctx->ubi512_ctx),
+	SKEIN_PRE_ (ubi_p,
 		    ctx->buffer,
 		    ctx->seed,
 		    sizeof(ctx->seed),
