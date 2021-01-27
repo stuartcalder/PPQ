@@ -96,8 +96,7 @@ symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 * SHIM_RESTRICT dragonfly_v1_ptr,
 				    dragonfly_v1_ptr->secret.hash_out,
 				    SYMM_THREEFISH512_BLOCK_BYTES,
 				    (SYMM_THREEFISH512_BLOCK_BYTES * 2) );
-		SHIM_STATIC_ASSERT (sizeof(dragonfly_v1_ptr->secret.hash_out) >= (SYMM_THREEFISH512_BLOCK_BYTES * 2),
-				    "hash_out must be at least this large.");
+		SHIM_STATIC_ASSERT (sizeof(dragonfly_v1_ptr->secret.hash_out) == (SYMM_THREEFISH512_BLOCK_BYTES * 2), "Size reminder.");
 		memcpy( dragonfly_v1_ptr->secret.enc_key,
 			dragonfly_v1_ptr->secret.hash_out,
 			SYMM_THREEFISH512_BLOCK_BYTES );
@@ -174,16 +173,14 @@ symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_
 	if( input_map_p->size < MINIMUM_POSSIBLE_FILE_SIZE_ ) {
 		shim_enforce_close_file( output_map_p->file );
 		remove( output_fname );
-#if 0
-		CLEANUP_ERROR_ (input_map_p);
-#endif
 		SHIM_ERRX ("Error: Input file doesn't appear to be large enough to be a SSC_DRAGONFLY_V1 encryped file\n");
 	}
-	uint8_t const *in = input_map_p->ptr;
+#define U64_ALIGN_ SHIM_ALIGNAS (uint64_t)
+	uint8_t const * in = input_map_p->ptr;
 	struct {
 		uint64_t                        tweak       [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
-		SHIM_ALIGNAS (uint64_t) uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
-		SHIM_ALIGNAS (uint64_t) uint8_t ctr_iv      [SYMM_THREEFISH512_CTR_IV_BYTES];
+		U64_ALIGN_ uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
+		U64_ALIGN_ uint8_t ctr_iv      [SYMM_THREEFISH512_CTR_IV_BYTES];
 		uint64_t                        header_size;
 		uint8_t                         header_id   [sizeof(SYMM_DRAGONFLY_V1_ID)];
 		uint8_t                         g_low;
