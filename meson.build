@@ -88,7 +88,7 @@ elif os == 'netbsd'
 elif os == 'linux'
   lib_deps += compiler.find_library('shim', static: shim_static)
 elif os == 'windows'
-  lib_deps += compiler.find_library('shim', static: shim_static, dirss: 'C:\lib')
+  lib_deps += compiler.find_library('shim', static: shim_static, dirs: 'C:\lib')
 endif
 
 inc_dir += '..'
