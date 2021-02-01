@@ -42,12 +42,6 @@ typedef struct Symm_Catena_ {
 		} gamma;
 	} temp;
 } Symm_Catena;
-#define SYMM_CATENA_NULL_INIT { \
-	.ubi512_ctx = SYMM_CATENA_NULL_INIT, \
-	.graph_memory = NULL, \
-	.x_buffer = { 0 }, \
-	.salt = { 0 } \
-}
 
 SHIM_BEGIN_DECLS
 
