@@ -26,22 +26,11 @@ typedef struct {
 	uint64_t key_schedule 	[SYMM_THREEFISH512_BLOCK_WORDS * SYMM_THREEFISH512_NUMBER_SUBKEYS];
 	uint64_t state		[SYMM_THREEFISH512_BLOCK_WORDS];
 } Symm_Threefish512_Stored;
-#define SYMM_THREEFISH512_STORED_NULL_INIT { \
-	.key_schedule = { 0 }, \
-	.state = { 0 } \
-}
-
 typedef struct {
 	uint64_t   state	[SYMM_THREEFISH512_BLOCK_WORDS];
 	uint64_t * stored_key;   /* -> External key words  */
 	uint64_t * stored_tweak; /*-> External tweak words */
 } Symm_Threefish512_On_Demand;
-#define SYMM_THREEFISH512_ON_DEMAND_NULL_INIT { \
-	.state = { 0 }, \
-	.stored_key = NULL, \
-	.stored_tweak = NULL \
-}
-
 #define WORD_ALIGN_ SHIM_ALIGNAS (uint64_t)
 typedef struct {
 	Symm_Threefish512_Stored threefish_stored; 
@@ -49,11 +38,6 @@ typedef struct {
 	WORD_ALIGN_ uint8_t	 buffer    [SYMM_THREEFISH512_BLOCK_BYTES];
 } Symm_Threefish512_CTR;
 #undef WORD_ALIGN_
-#define SYMM_THREEFISH512_CTR_NULL_INIT { \
-	.threefish_stored = SYMM_THREEFISH512_STORED_NULL_INIT, \
-	.keystream = { 0 }, \
-	.buffer = { 0 } \
-}
 
 SHIM_BEGIN_DECLS
 
