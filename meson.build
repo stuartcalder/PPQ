@@ -56,7 +56,7 @@ if os != 'netbsd' and compiler.get_id() != 'clang'
   gcc_compatible_flags += '-flto'
 endif
 
-if os == 'darwin' # On OSX we require __STDC_WANT_LIB_EXT1__ to be defined as 1, for access to memset_s.
+if os == 'darwin' # On MacOS we require __STDC_WANT_LIB_EXT1__ to be defined as 1, for access to memset_s.
   lang_flags += _D_PREFIX + '__STDC_WANT_LIB_EXT1__=1'
 endif
 
@@ -69,7 +69,7 @@ if os in _UNIXLIKE_OPERATING_SYSTEMS
   endif
 endif
 
-if os == 'openbsd' or os == 'freebsd' or os == 'darwin' # On OpenBSD, FreeBSD, and OSX, the library dependencies and 'include_install' directory are the same.
+if os == 'openbsd' or os == 'freebsd' or os == 'darwin' # On OpenBSD, FreeBSD, and MacOS, the library dependencies and 'include_install' directory are the same.
   include_install = '/usr/local/include'
 elif os == 'netbsd'
   include_install = '/usr/local/include'

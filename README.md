@@ -17,7 +17,7 @@ using Skein, as Skein can output an arbitrary amount of bytes natively.
 	$ ninja
 	# ninja install
 ```
-#### On OSX, BSDs
+#### On MacOS, BSDs
 1. Build and install [shim](https://github.com/stuartcalder/shim).
 2. Execute the following:
 ```
