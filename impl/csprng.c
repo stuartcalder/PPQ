@@ -4,6 +4,7 @@ void
 symm_csprng_reseed (Symm_CSPRNG *   SHIM_RESTRICT ctx,
 		    uint8_t const * SHIM_RESTRICT seed)
 {
+	SHIM_STATIC_ASSERT (sizeof(ctx->buffer) == (SYMM_THREEFISH512_BLOCK_BYTES * 2), "Wrong buffer size.");
 	memcpy( ctx->buffer,
 		ctx->seed,
 		SYMM_THREEFISH512_BLOCK_BYTES );
@@ -17,8 +18,7 @@ symm_csprng_reseed (Symm_CSPRNG *   SHIM_RESTRICT ctx,
 	shim_secure_zero( ctx->buffer, sizeof(ctx->buffer) );
 }
 void
-symm_csprng_os_reseed (Symm_CSPRNG * ctx)
-{
+symm_csprng_os_reseed (Symm_CSPRNG * ctx) {
 	SHIM_STATIC_ASSERT (sizeof(ctx->buffer) == (SYMM_THREEFISH512_BLOCK_BYTES * 2), "Wrong buffer size.");
 	memcpy( ctx->buffer,
 		ctx->seed,
@@ -43,10 +43,12 @@ static uint8_t const SKEIN_PRECOMPUTED_CFG_ [SYMM_THREEFISH512_BLOCK_BYTES] = {
 	0xd7, 0x59, 0x94, 0x61, 0x00, 0xb8, 0xb8, 0x07
 };
 
-#define SKEIN_PRE_(ctx_p, output, input, input_size, output_size) \
+#define SKEIN_PRE_CFG_IMPL_(ctx_p, output, input, input_size, output_size) \
 	memcpy( ctx_p->key_state, SKEIN_PRECOMPUTED_CFG_, sizeof(SKEIN_PRECOMPUTED_CFG_) ); \
 	symm_ubi512_chain_message( ctx_p, input, input_size ); \
 	symm_ubi512_chain_output( ctx_p, output, output_size )
+#define SKEIN_PRE_CFG_(ubi_p_v) \
+	SKEIN_PRE_CFG_IMPL_ (ubi_p_v, ctx->buffer, ctx->seed, sizeof(ctx->seed), sizeof(ctx->buffer) )
 
 void
 symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
@@ -57,11 +59,7 @@ symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
 		return;
 	Symm_UBI512 * ubi_p = &ctx->ubi512_ctx;
 	while( requested_bytes > SYMM_THREEFISH512_BLOCK_BYTES ) {
-		SKEIN_PRE_ (ubi_p,
-			    ctx->buffer,
-			    ctx->seed,
-			    sizeof(ctx->seed),
-			    sizeof(ctx->buffer));
+		SKEIN_PRE_CFG_ (ubi_p);
 		memcpy( ctx->seed,
 			ctx->buffer,
 			SYMM_THREEFISH512_BLOCK_BYTES );
@@ -71,11 +69,7 @@ symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
 		output          += SYMM_THREEFISH512_BLOCK_BYTES;
 		requested_bytes -= SYMM_THREEFISH512_BLOCK_BYTES;
 	}
-	SKEIN_PRE_ (ubi_p,
-		    ctx->buffer,
-		    ctx->seed,
-		    sizeof(ctx->seed),
-		    sizeof(ctx->buffer));
+	SKEIN_PRE_CFG_ (ubi_p);
 	memcpy( ctx->seed,
 		ctx->buffer,
 		SYMM_THREEFISH512_BLOCK_BYTES );

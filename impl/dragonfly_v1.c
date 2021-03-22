@@ -31,7 +31,7 @@
 	CLEANUP_MAP_ (input_map_ptr)
 
 void
-symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 * SHIM_RESTRICT dragonfly_v1_ptr,
+symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1_Encrypt * SHIM_RESTRICT dragonfly_v1_ptr,
 			   Shim_Map * const    SHIM_RESTRICT input_map_ptr,
 			   Shim_Map * const    SHIM_RESTRICT output_map_ptr,
 			   char const * const  SHIM_RESTRICT output_filename)

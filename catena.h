@@ -25,7 +25,7 @@ enum {
 
 #define WORD_ALIGN_ 		SHIM_ALIGNAS (uint64_t)
 
-typedef struct Symm_Catena_ {
+typedef struct {
 	Symm_UBI512		ubi512_ctx;
 	uint8_t *		graph_memory;
 	WORD_ALIGN_ uint8_t	x_buffer [SYMM_THREEFISH512_BLOCK_BYTES];

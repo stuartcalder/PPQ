@@ -40,7 +40,7 @@ enum {
 	SYMM_COMMON_PAD_MODE_ASIF
 };
 
-typedef struct Symm_Catena_Input_ {
+typedef struct {
 	Symm_CSPRNG csprng;
 	uint8_t     password_buffer [SYMM_COMMON_PASSWORD_BUFFER_BYTES];
 	uint8_t	    check_buffer    [SYMM_COMMON_PASSWORD_BUFFER_BYTES];
