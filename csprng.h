@@ -7,7 +7,7 @@
 #include <shim/operations.h>
 
 #define WORD_ALIGN_ SHIM_ALIGNAS (uint64_t)
-typedef struct Symm_CSPRNG_ {
+typedef struct {
 	Symm_UBI512	    ubi512_ctx;
 	WORD_ALIGN_ uint8_t buffer [SYMM_THREEFISH512_BLOCK_BYTES * 2];
 	WORD_ALIGN_ uint8_t seed   [SYMM_THREEFISH512_BLOCK_BYTES];

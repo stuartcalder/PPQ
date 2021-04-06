@@ -1,6 +1,6 @@
 project('symm',
 	'c',
-	default_options: ['c_std=c18', 'optimization=3', 'buildtype=release', 'strip=true'])
+	default_options: ['c_std=c17', 'optimization=3', 'buildtype=release', 'strip=true'])
 
 _PROJECT  = 'symm'
 _LANG = 'c'
