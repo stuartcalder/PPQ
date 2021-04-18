@@ -35,7 +35,7 @@ symm_csprng_os_reseed (Symm_CSPRNG * ctx);
 SYMM_API void
 symm_csprng_get (Symm_CSPRNG * SHIM_RESTRICT ctx,
 		 uint8_t *     SHIM_RESTRICT output,
-		 uint64_t                    requested_bytes);
+		 int64_t                     requested_bytes);
 
 SHIM_END_DECLS
 

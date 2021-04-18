@@ -1,6 +1,15 @@
 #ifndef SYMM_MACROS_H
 #define SYMM_MACROS_H
+#include <shim/errors.h>
 #include <shim/macros.h>
+
+#ifdef SYMM_EXT_DEBUG
+#	define SYMM_ASSERT_MSG(boolean, msg_ptr) shim_assert_msg(boolean, msg_ptr)
+#	define SYMM_ASSERT(boolean)		 shim_assert(boolean)
+#else
+#	define SYMM_ASSERT_MSG(boolean, msg_ptr) /* Nil */
+#	define SYMM_ASSERT(boolean)		 /* Nil */
+#endif
 
 #ifdef SYMM_EXT_STATIC_LIB
 #	define SYMM_API

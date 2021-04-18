@@ -31,7 +31,8 @@ src = [
   'impl/skein512.c',
   'impl/threefish512.c',
   'impl/ubi512.c',
-  'impl/dragonfly_v1.c'
+  'impl/dragonfly_v1.c',
+  'impl/rand.c'
   ]
 # Setup these empty arrays that we will be appending to depending on OS, etc.
 lib_deps   = []

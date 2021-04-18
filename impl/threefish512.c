@@ -212,51 +212,51 @@ void
 symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 				uint8_t *                             output,
 				uint8_t const *                       input,
-				uint64_t                              input_size,
-				uint64_t                              starting_byte)
+				int64_t                               input_size,
+				int64_t                               starting_byte)
 {
-#define INCREMENT_64BIT_COUNTER_(keystream_v) SHIM_BIT_CAST_OP (keystream_v, uint64_t, tmp, ++tmp)
-	if( !starting_byte ) {
-		memset( ctx->keystream, 0, sizeof(uint64_t) );
-	} else {
-		uint64_t starting_block = starting_byte / SYMM_THREEFISH512_BLOCK_BYTES;
-		int      offset         = starting_byte % SYMM_THREEFISH512_BLOCK_BYTES;
-		int      bytes          = SYMM_THREEFISH512_BLOCK_BYTES - offset;
-		memcpy( ctx->keystream, &starting_block, sizeof(starting_block) );
-		symm_threefish512_stored_cipher( &ctx->threefish_stored,
-						 ctx->buffer,
-						 ctx->keystream );
-		INCREMENT_64BIT_COUNTER_ (ctx->keystream);
+#define INCREMENT_64BIT_COUNTER_(keystream_v) SHIM_BIT_CAST_OP (keystream_v, int64_t, tmp, ++tmp)
+	if (!starting_byte)
+		memset(ctx->keystream, 0, sizeof(int64_t));
+	else {
+		int64_t starting_block = starting_byte / SYMM_THREEFISH512_BLOCK_BYTES;
+		int      offset        = starting_byte % SYMM_THREEFISH512_BLOCK_BYTES;
+		int      bytes         = SYMM_THREEFISH512_BLOCK_BYTES - offset;
+		memcpy(ctx->keystream, &starting_block, sizeof(starting_block));
+		symm_threefish512_stored_cipher(&ctx->threefish_stored,
+						ctx->buffer,
+						ctx->keystream);
+		INCREMENT_64BIT_COUNTER_(ctx->keystream);
 		uint8_t * offset_buffer = ctx->buffer + offset;
 		int left;
-		if( input_size >= (uint64_t)bytes )
+		if (input_size >= (int64_t)bytes)
 			left = bytes;
 		else
 			left = (int)input_size;
-		for( int i = 0; i < left; ++i )
-			offset_buffer[ i ] ^= input[ i ];
-		memcpy( output, offset_buffer, left );
+		for (int i = 0; i < left; ++i)
+			offset_buffer[i] ^= input[i];
+		memcpy(output, offset_buffer, left);
 		input      += left;
 		output     += left;
 		input_size -= left;
 	}
-	while( input_size >= SYMM_THREEFISH512_BLOCK_BYTES ) {
-		symm_threefish512_stored_cipher( &ctx->threefish_stored,
-						 ctx->buffer,
-						 ctx->keystream );
-		INCREMENT_64BIT_COUNTER_ (ctx->keystream);
-		shim_xor_64( ctx->buffer, input );
-		memcpy( output, ctx->buffer, SYMM_THREEFISH512_BLOCK_BYTES );
+	while (input_size >= SYMM_THREEFISH512_BLOCK_BYTES) {
+		symm_threefish512_stored_cipher(&ctx->threefish_stored,
+						ctx->buffer,
+						ctx->keystream);
+		INCREMENT_64BIT_COUNTER_(ctx->keystream);
+		shim_xor_64(ctx->buffer, input);
+		memcpy(output, ctx->buffer, SYMM_THREEFISH512_BLOCK_BYTES);
 		input      += SYMM_THREEFISH512_BLOCK_BYTES;
 		output     += SYMM_THREEFISH512_BLOCK_BYTES;
 		input_size -= SYMM_THREEFISH512_BLOCK_BYTES;
 	}
-	if( input_size ) {
-		symm_threefish512_stored_cipher( &ctx->threefish_stored,
-						 ctx->buffer,
-						 ctx->keystream );
-		for( int i = 0; i < (int)input_size; ++i )
-			ctx->buffer[ i ] ^= input[ i ];
-		memcpy( output, ctx->buffer, input_size );
+	if (input_size) {
+		symm_threefish512_stored_cipher(&ctx->threefish_stored,
+						ctx->buffer,
+						ctx->keystream);
+		for (int i = 0; i < input_size; ++i)
+			ctx->buffer[i] ^= input[i];
+		memcpy(output, ctx->buffer, input_size);
 	}
 }// ~ symm_threefish512_ctr_xorcrypt(...)

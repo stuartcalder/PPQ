@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "catena.h"
 #include "skein512.h"
+#include "macros.h"
 
 #define INDEX_HASH_WORD_(u8_ptr, index) \
 	(u8_ptr + ((index) * SYMM_THREEFISH512_BLOCK_BYTES))
@@ -69,44 +70,44 @@ symm_catena_nophi (Symm_Catena * SHIM_RESTRICT ctx,
 		   uint8_t const               lambda)
 {
 	/* Allocate the graph memory. Free it at the end of the procedure; return on alloc failure. */
-	uint64_t const allocated_bytes = (UINT64_C (1) << (g_high + 6));
-	ctx->graph_memory = (uint8_t *)malloc( allocated_bytes );
-	if( !ctx->graph_memory )
+	int64_t const allocated_bytes = (INT64_C (1) << (g_high + 6));
+	ctx->graph_memory = (uint8_t *)malloc(allocated_bytes);
+	if (!ctx->graph_memory)
 		return SYMM_CATENA_ALLOC_FAILURE;
 	/* Construct the tweak; concatenation with password and salt and hash into the x buffer. */
-	make_tweak_nophi_( ctx, lambda );
-	memcpy( ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES,
-	        password,
-	        password_size );
-	shim_secure_zero( password, password_size );
-	memcpy( ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES + password_size,
-	        ctx->salt,
-	        sizeof(ctx->salt) );
-	symm_skein512_hash_native( &ctx->ubi512_ctx,
-				   ctx->x_buffer,
-				   ctx->temp.tw_pw_salt,
-				   password_size + (SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_SALT_BYTES) );
+	make_tweak_nophi_(ctx, lambda);
+	memcpy(ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES,
+	       password,
+	       password_size);
+	shim_secure_zero(password, password_size);
+	memcpy(ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES + password_size,
+	       ctx->salt,
+	       sizeof(ctx->salt));
+	symm_skein512_hash_native(&ctx->ubi512_ctx,
+				  ctx->x_buffer,
+				  ctx->temp.tw_pw_salt,
+				  password_size + (SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_SALT_BYTES));
 	/* Initial flap; hash the x buffer into itself. */
-	flap_nophi_( ctx, (g_low + 1) / 2, lambda );
-	symm_skein512_hash_native( &ctx->ubi512_ctx,
-				   ctx->x_buffer,
-				   ctx->x_buffer,
-				   sizeof(ctx->x_buffer) );
-	for( uint8_t g = g_low; g <= g_high; ++g ) {
+	flap_nophi_(ctx, (g_low + 1) / 2, lambda);
+	symm_skein512_hash_native(&ctx->ubi512_ctx,
+				  ctx->x_buffer,
+				  ctx->x_buffer,
+				  sizeof(ctx->x_buffer));
+	for (uint8_t g = g_low; g <= g_high; ++g) {
 	/* Iterating flap over incrementing garlics of g, hashing the output
 	 * into the x buffer. */
-		flap_nophi_( ctx, g, lambda );
+		flap_nophi_(ctx, g, lambda);
 		*(ctx->temp.catena) = g;
-		COPY_HASH_WORD_ (ctx->temp.catena + sizeof(uint8_t), ctx->x_buffer);
-		symm_skein512_hash_native( &ctx->ubi512_ctx,
-					   ctx->x_buffer,
-					   ctx->temp.catena,
-					   sizeof(ctx->temp.catena) );
+		COPY_HASH_WORD_(ctx->temp.catena + sizeof(uint8_t), ctx->x_buffer);
+		symm_skein512_hash_native(&ctx->ubi512_ctx,
+					  ctx->x_buffer,
+					  ctx->temp.catena,
+					  sizeof(ctx->temp.catena));
 	}
 	/* Zero over and free the memory. Copy the buffer out of the procedure. */
-	shim_secure_zero( ctx->graph_memory, allocated_bytes );
-	free( ctx->graph_memory );
-	COPY_HASH_WORD_( output, ctx->x_buffer );
+	shim_secure_zero(ctx->graph_memory, allocated_bytes);
+	free(ctx->graph_memory);
+	COPY_HASH_WORD_(output, ctx->x_buffer);
 	return SYMM_CATENA_SUCCESS;
 }
 int
@@ -119,43 +120,44 @@ symm_catena_usephi (Symm_Catena * SHIM_RESTRICT ctx,
 		    uint8_t const               lambda)
 {
 	/* Allocate the graph memory. Free it at the end of the procedure; return on alloc failure. */
-	ctx->graph_memory = (uint8_t *)malloc( (UINT64_C (1) << (g_high + 6)) );
-	if( !ctx->graph_memory )
+	int64_t allocated_bytes = INT64_C(1) << (g_high + 6);
+	ctx->graph_memory = (uint8_t *)malloc(allocated_bytes);
+	if (!ctx->graph_memory)
 		return SYMM_CATENA_ALLOC_FAILURE;
 	/* Construct the tweak; concatenation with password and salt and hash into the x buffer. */
-	make_tweak_usephi_( ctx, lambda );
-	memcpy( ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES,
-	        password,
-	        password_size );
-	shim_secure_zero( password, password_size );
-	memcpy( ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES + password_size,
-	        ctx->salt,
-	        sizeof(ctx->salt) );
-	symm_skein512_hash_native( &ctx->ubi512_ctx,
-				   ctx->x_buffer,
-				   ctx->temp.tw_pw_salt,
-				   password_size + (SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_SALT_BYTES) );
+	make_tweak_usephi_(ctx, lambda);
+	memcpy(ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES,
+	       password,
+	       password_size);
+	shim_secure_zero(password, password_size);
+	memcpy(ctx->temp.tw_pw_salt + SYMM_CATENA_TWEAK_BYTES + password_size,
+	       ctx->salt,
+	       sizeof(ctx->salt));
+	symm_skein512_hash_native(&ctx->ubi512_ctx,
+				  ctx->x_buffer,
+				  ctx->temp.tw_pw_salt,
+				  password_size + (SYMM_CATENA_TWEAK_BYTES + SYMM_CATENA_SALT_BYTES));
 	/* Initial flap; hash the x buffer into itself. */
-	flap_usephi_( ctx, (g_low + 1) / 2, lambda );
-	symm_skein512_hash_native( &ctx->ubi512_ctx,
-				   ctx->x_buffer,
-				   ctx->x_buffer,
-				   sizeof(ctx->x_buffer) );
-	for( uint8_t g = g_low; g <= g_high; ++g ) {
+	flap_usephi_(ctx, (g_low + 1) / 2, lambda);
+	symm_skein512_hash_native(&ctx->ubi512_ctx,
+				  ctx->x_buffer,
+				  ctx->x_buffer,
+				  sizeof(ctx->x_buffer));
+	for (uint8_t g = g_low; g <= g_high; ++g) {
 	/* Iterating flap over incrementing garlics of g, hashing the output
 	 * into the x buffer. */
-		flap_usephi_( ctx, g, lambda );
+		flap_usephi_(ctx, g, lambda);
 		*(ctx->temp.catena) = g;
-		COPY_HASH_WORD_ (ctx->temp.catena + sizeof(uint8_t), ctx->x_buffer);
-		symm_skein512_hash_native( &ctx->ubi512_ctx,
-					   ctx->x_buffer,
-					   ctx->temp.catena,
-					   sizeof(ctx->temp.catena) );
+		COPY_HASH_WORD_(ctx->temp.catena + sizeof(uint8_t), ctx->x_buffer);
+		symm_skein512_hash_native(&ctx->ubi512_ctx,
+					  ctx->x_buffer,
+					  ctx->temp.catena,
+					  sizeof(ctx->temp.catena));
 	}
 	/* Zero over and free the memory. Copy the buffer out of the procedure. */
-	shim_secure_zero( ctx->graph_memory, (UINT64_C (1) << (g_high + 6)) );
-	free( ctx->graph_memory );
-	COPY_HASH_WORD_ (output, ctx->x_buffer);
+	shim_secure_zero(ctx->graph_memory, allocated_bytes);
+	free(ctx->graph_memory);
+	COPY_HASH_WORD_(output, ctx->x_buffer);
 	return SYMM_CATENA_SUCCESS;
 }
 
@@ -166,15 +168,15 @@ make_tweak_nophi_ (Symm_Catena * SHIM_RESTRICT ctx,
 		   uint8_t const               lambda)
 {
 	uint8_t * t = ctx->temp.tw_pw_salt;
-	memcpy( t, No_Phi_Version_ID_Hash, SYMM_THREEFISH512_BLOCK_BYTES );
+	memcpy(t, No_Phi_Version_ID_Hash, SYMM_THREEFISH512_BLOCK_BYTES);
 	t += SYMM_THREEFISH512_BLOCK_BYTES;
 	(*t++) = SYMM_CATENA_DOMAIN_KDF;
 	(*t++) = lambda;
 	{
 		uint16_t tmp = SYMM_THREEFISH512_BLOCK_BYTES;
-		memcpy( t, &tmp, sizeof(tmp) );
+		memcpy(t, &tmp, sizeof(tmp));
 		tmp = SYMM_CATENA_SALT_BYTES;
-		memcpy( t + sizeof(tmp), &tmp, sizeof(tmp) );
+		memcpy(t + sizeof(tmp), &tmp, sizeof(tmp));
 	}
 }
 void
@@ -182,15 +184,15 @@ make_tweak_usephi_ (Symm_Catena * SHIM_RESTRICT ctx,
 		    uint8_t const               lambda)
 {
 	uint8_t * t = ctx->temp.tw_pw_salt;
-	memcpy( t, Use_Phi_Version_ID_Hash, SYMM_THREEFISH512_BLOCK_BYTES );
+	memcpy(t, Use_Phi_Version_ID_Hash, SYMM_THREEFISH512_BLOCK_BYTES);
 	t += SYMM_THREEFISH512_BLOCK_BYTES;
 	(*t++) = SYMM_CATENA_DOMAIN_KDF;
 	(*t++) = lambda;
 	{
 		uint16_t tmp = SYMM_THREEFISH512_BLOCK_BYTES;
-		memcpy( t, &tmp, sizeof(tmp) );
+		memcpy(t, &tmp, sizeof(tmp));
 		tmp = SYMM_CATENA_SALT_BYTES;
-		memcpy( t + sizeof(tmp), &tmp, sizeof(tmp) );
+		memcpy(t + sizeof(tmp), &tmp, sizeof(tmp));
 	}
 }
 void
@@ -211,63 +213,61 @@ flap_nophi_ (Symm_Catena * SHIM_RESTRICT ctx,
 		0x87, 0x69, 0x83, 0x54, 0x3c, 0x17, 0x93, 0x02,
 		0xd7, 0x59, 0x94, 0x61, 0x00, 0xb8, 0xb8, 0x07
 	};
-	memcpy( ctx->ubi512_ctx.key_state,
-	        Config,
-	        sizeof(Config) );
-	symm_ubi512_chain_message( &ctx->ubi512_ctx,
-				   INDEX_HASH_WORD_ (X_MEM_, 0),
-				   SYMM_THREEFISH512_BLOCK_BYTES );
-	symm_ubi512_chain_output( &ctx->ubi512_ctx,
-				  INDEX_HASH_WORD_ (TEMP_MEM_, 0),
-				  (SYMM_THREEFISH512_BLOCK_BYTES * 2) );
-	HASH_TWO_WORDS_ (ctx,
-			 INDEX_HASH_WORD_ (TEMP_MEM_, 1),
-			 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-	COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_, 2),
-			 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-	HASH_TWO_WORDS_ (ctx,
-		 	 INDEX_HASH_WORD_ (TEMP_MEM_,  0),
-			 INDEX_HASH_WORD_ (TEMP_MEM_,  1));
-	COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 0),
-			 INDEX_HASH_WORD_ (TEMP_MEM_,  1));
-	COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 1),
-			 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-	uint64_t const max_hash_index = (UINT64_C (1) << garlic) - 1;
-	if( max_hash_index > 1 ) {
-		HASH_TWO_WORDS_ (ctx,
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  2),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 2),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  2));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_,  1),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  2));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_,  2),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		HASH_TWO_WORDS_ (ctx,
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  0),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  1));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 3),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
+	memcpy(ctx->ubi512_ctx.key_state, Config, sizeof(Config));
+	symm_ubi512_chain_message(&ctx->ubi512_ctx,
+				  INDEX_HASH_WORD_(X_MEM_, 0),
+				  SYMM_THREEFISH512_BLOCK_BYTES);
+	symm_ubi512_chain_output(&ctx->ubi512_ctx,
+				 INDEX_HASH_WORD_(TEMP_MEM_, 0),
+				 (SYMM_THREEFISH512_BLOCK_BYTES * 2));
+	HASH_TWO_WORDS_(ctx,
+			INDEX_HASH_WORD_(TEMP_MEM_, 1),
+			INDEX_HASH_WORD_(TEMP_MEM_, 0));
+	COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 2),
+			INDEX_HASH_WORD_(TEMP_MEM_, 0));
+	HASH_TWO_WORDS_(ctx,
+		 	INDEX_HASH_WORD_(TEMP_MEM_, 0),
+			INDEX_HASH_WORD_(TEMP_MEM_, 1));
+	COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, 0),
+			INDEX_HASH_WORD_(TEMP_MEM_, 1));
+	COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, 1),
+			INDEX_HASH_WORD_(TEMP_MEM_, 0));
+	int64_t const max_hash_index = (INT64_C (1) << garlic) - 1;
+	if (max_hash_index > 1) {
+		HASH_TWO_WORDS_(ctx,
+				INDEX_HASH_WORD_(TEMP_MEM_, 2),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, 2),
+				INDEX_HASH_WORD_(TEMP_MEM_, 2));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 1),
+				INDEX_HASH_WORD_(TEMP_MEM_, 2));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 2),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
+		HASH_TWO_WORDS_(ctx,
+				INDEX_HASH_WORD_(TEMP_MEM_, 0),
+				INDEX_HASH_WORD_(TEMP_MEM_, 1));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, 3),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
 	}
-	for( uint64_t i = 4; i <= max_hash_index; ++i ) {
-		HASH_TWO_WORDS_ (ctx,
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  2),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_,  1),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_,  0),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  2));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, i),
-				 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
+	for (int64_t i = 4; i <= max_hash_index; ++i) {
+		HASH_TWO_WORDS_(ctx,
+				INDEX_HASH_WORD_(TEMP_MEM_, 2),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 1),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 0),
+				INDEX_HASH_WORD_(TEMP_MEM_, 2));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, i),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
 	}
-	gamma_( ctx, garlic );
-	symm_graph_hash( &ctx->ubi512_ctx,
-			 ctx->temp.mhf,
-			 GRAPH_MEM_,
-			 garlic,
-			 lambda );
-	COPY_HASH_WORD_ (INDEX_HASH_WORD_ (X_MEM_, 0),
-			 INDEX_HASH_WORD_ (GRAPH_MEM_, max_hash_index));
+	gamma_(ctx, garlic);
+	symm_graph_hash(&ctx->ubi512_ctx,
+			ctx->temp.mhf,
+			GRAPH_MEM_,
+			garlic,
+			lambda);
+	COPY_HASH_WORD_(INDEX_HASH_WORD_(X_MEM_, 0),
+			INDEX_HASH_WORD_(GRAPH_MEM_, max_hash_index));
 #undef X_MEM_
 #undef GRAPH_MEM_
 #undef TEMP_MEM_
@@ -291,62 +291,60 @@ flap_usephi_ (Symm_Catena * SHIM_RESTRICT ctx,
 		0x87,0x69,0x83,0x54,0x3c,0x17,0x93,0x02,
 		0xd7,0x59,0x94,0x61,0x00,0xb8,0xb8,0x07
 	};
-	memcpy( ctx->ubi512_ctx.key_state,
-		Config,
-		sizeof(Config) );
-	symm_ubi512_chain_message( &ctx->ubi512_ctx,
-				   INDEX_HASH_WORD_ (X_MEM_, 0),
-				   SYMM_THREEFISH512_BLOCK_BYTES );
-	symm_ubi512_chain_output( &ctx->ubi512_ctx,
-				  INDEX_HASH_WORD_ (TEMP_MEM_, 0),
-				  (SYMM_THREEFISH512_BLOCK_BYTES * 2) );
-	HASH_TWO_WORDS_ (ctx,
-			 INDEX_HASH_WORD_ (TEMP_MEM_, 1),
-			 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-	COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_, 2),
-			 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-	HASH_TWO_WORDS_ (ctx,
-			 INDEX_HASH_WORD_ (TEMP_MEM_,  0),
-			 INDEX_HASH_WORD_ (TEMP_MEM_,  1));
-	COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 0),
-			 INDEX_HASH_WORD_ (TEMP_MEM_,  1));
-	COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 1),
-			 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-	uint64_t const max_hash_index = (UINT64_C (1) << garlic) - 1;
-	if( max_hash_index > 1 ) {
-		HASH_TWO_WORDS_ (ctx,
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 2),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 2),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 2));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_, 1),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 2));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_, 2),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-		HASH_TWO_WORDS_ (ctx,
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 0),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 1));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, 3),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
+	memcpy(ctx->ubi512_ctx.key_state, Config, sizeof(Config));
+	symm_ubi512_chain_message(&ctx->ubi512_ctx,
+				  INDEX_HASH_WORD_(X_MEM_, 0),
+				  SYMM_THREEFISH512_BLOCK_BYTES);
+	symm_ubi512_chain_output(&ctx->ubi512_ctx,
+				 INDEX_HASH_WORD_(TEMP_MEM_, 0),
+				 (SYMM_THREEFISH512_BLOCK_BYTES * 2));
+	HASH_TWO_WORDS_(ctx,
+			INDEX_HASH_WORD_(TEMP_MEM_, 1),
+			INDEX_HASH_WORD_(TEMP_MEM_, 0));
+	COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 2),
+			INDEX_HASH_WORD_(TEMP_MEM_, 0));
+	HASH_TWO_WORDS_(ctx,
+			INDEX_HASH_WORD_(TEMP_MEM_,  0),
+			INDEX_HASH_WORD_(TEMP_MEM_,  1));
+	COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, 0),
+			INDEX_HASH_WORD_(TEMP_MEM_,  1));
+	COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, 1),
+			INDEX_HASH_WORD_(TEMP_MEM_,  0));
+	int64_t const max_hash_index = (INT64_C (1) << garlic) - 1;
+	if (max_hash_index > 1) {
+		HASH_TWO_WORDS_(ctx,
+				INDEX_HASH_WORD_(TEMP_MEM_, 2),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, 2),
+				INDEX_HASH_WORD_(TEMP_MEM_, 2));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 1),
+				INDEX_HASH_WORD_(TEMP_MEM_, 2));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 2),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
+		HASH_TWO_WORDS_(ctx,
+				INDEX_HASH_WORD_(TEMP_MEM_, 0),
+				INDEX_HASH_WORD_(TEMP_MEM_, 1));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, 3),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
 	}
-	for( uint64_t i = 4; i <= max_hash_index; ++i ) {
-		HASH_TWO_WORDS_ (ctx,
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 2),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_, 1),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (TEMP_MEM_, 0),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 2));
-		COPY_HASH_WORD_ (INDEX_HASH_WORD_ (GRAPH_MEM_, i),
-				 INDEX_HASH_WORD_ (TEMP_MEM_, 0));
+	for (int64_t i = 4; i <= max_hash_index; ++i) {
+		HASH_TWO_WORDS_(ctx,
+				INDEX_HASH_WORD_(TEMP_MEM_, 2),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 1),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(TEMP_MEM_, 0),
+				INDEX_HASH_WORD_(TEMP_MEM_, 2));
+		COPY_HASH_WORD_(INDEX_HASH_WORD_(GRAPH_MEM_, i),
+				INDEX_HASH_WORD_(TEMP_MEM_, 0));
 	}
-	gamma_( ctx, garlic );
-	symm_graph_hash( &ctx->ubi512_ctx,
-			 ctx->temp.mhf,
-			 GRAPH_MEM_,
-			 garlic,
-			 lambda );
-	phi_( ctx, garlic );
+	gamma_(ctx, garlic);
+	symm_graph_hash(&ctx->ubi512_ctx,
+			ctx->temp.mhf,
+			GRAPH_MEM_,
+			garlic,
+			lambda);
+	phi_(ctx, garlic);
 #undef X_MEM_
 #undef GRAPH_MEM_
 #undef TEMP_MEM_
@@ -371,9 +369,12 @@ gamma_ (Symm_Catena * SHIM_RESTRICT ctx,
 				   TEMP_MEM_.rng,
 				   TEMP_MEM_.rng,
 				   SALT_AND_GARLIC_BYTES_ );
+	#if 0
 	uint64_t const count = (UINT64_C (1) << (((3 * garlic) + 3) / 4));
+	#endif
+	int64_t const count = (INT64_C (1) << (((3 * garlic) + 3) / 4));
 	int const right_shift_amt = 64 - garlic;
-	for( uint64_t i = 0; i < count; ++i ) {
+	for( int64_t i = 0; i < count; ++i ) {
 		SHIM_ALIGNAS (uint64_t) static uint8_t const Config [SYMM_THREEFISH512_BLOCK_BYTES] = {
 			0xf0, 0xef, 0xcb, 0xca, 0xbf, 0xd0, 0x04, 0x7b,
 			0xc0, 0x5d, 0x3e, 0x3a, 0x1d, 0x53, 0xe4, 0x9f,
@@ -424,7 +425,10 @@ phi_ (Symm_Catena * SHIM_RESTRICT ctx,
 #define TEMP_MEM_  ctx->temp.phi
 #define X_MEM_     ctx->x_buffer
 
+	#if 0
 	uint64_t const last_word_index = (UINT64_C (1) << garlic) - 1;
+	#endif
+	int64_t const last_word_index = (INT64_C (1) << garlic) - 1;
 	int const right_shift_amt = 64 - garlic;
 	uint64_t j;
 	{
@@ -440,7 +444,7 @@ phi_ (Symm_Catena * SHIM_RESTRICT ctx,
 	HASH_TWO_WORDS_ (ctx,
 			 INDEX_HASH_WORD_ (GRAPH_MEM_, 0),
 			 INDEX_HASH_WORD_ (TEMP_MEM_,  0));
-	for( uint64_t i = 1; i <= last_word_index; ++i ) {
+	for( int64_t i = 1; i <= last_word_index; ++i ) {
 		{
 			memcpy( &j,
 				INDEX_HASH_WORD_ (GRAPH_MEM_, (i - 1)),

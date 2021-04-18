@@ -36,18 +36,18 @@ SHIM_BEGIN_DECLS
 
 SYMM_API void
 symm_ubi512_chain_config (Symm_UBI512 * SHIM_RESTRICT ctx,
-			  uint64_t const              num_out_bits);
+			  int64_t const               num_out_bits);
 SYMM_API void
 symm_ubi512_chain_native_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 			         uint8_t *     SHIM_RESTRICT output);
 SYMM_API void
 symm_ubi512_chain_message (Symm_UBI512 *   SHIM_RESTRICT ctx,
 			   uint8_t const * SHIM_RESTRICT input,
-			   uint64_t                      num_in_bytes);
+			   int64_t                       num_in_bytes);
 SYMM_API void
 symm_ubi512_chain_output (Symm_UBI512 * SHIM_RESTRICT ctx,
 			  uint8_t *     SHIM_RESTRICT output,
-			  uint64_t                    num_out_bytes);
+			  int64_t                     num_out_bytes);
 SYMM_API void
 symm_ubi512_chain_key (Symm_UBI512 *   SHIM_RESTRICT ctx,
 		       uint8_t const * SHIM_RESTRICT input);

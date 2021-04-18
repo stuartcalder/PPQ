@@ -44,8 +44,8 @@ typedef struct {
 	Symm_CSPRNG csprng;
 	uint8_t     password_buffer [SYMM_COMMON_PASSWORD_BUFFER_BYTES];
 	uint8_t	    check_buffer    [SYMM_COMMON_PASSWORD_BUFFER_BYTES];
-	uint64_t    password_size;
-	uint64_t    padding_bytes;
+	int64_t     password_size;
+	int64_t     padding_bytes;
 	int         padding_mode;
 	bool        supplement_entropy;
 	uint8_t     g_low;

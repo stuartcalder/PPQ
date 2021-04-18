@@ -67,8 +67,8 @@ SYMM_API void
 symm_threefish512_ctr_xorcrypt (Symm_Threefish512_CTR * SHIM_RESTRICT ctx,
 				uint8_t *                             output,
 				uint8_t const *                       input,
-				uint64_t                              input_size,
-				uint64_t                              starting_byte);
+				int64_t                               input_size,
+				int64_t                               starting_byte);
 
 SHIM_END_DECLS
 
