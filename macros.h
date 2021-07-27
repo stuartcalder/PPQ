@@ -1,24 +1,34 @@
-#ifndef SYMM_MACROS_H
-#define SYMM_MACROS_H
-#include <shim/errors.h>
-#include <shim/macros.h>
+#ifndef SKC_MACROS_H
+#define SKC_MACROS_H
 
-#ifdef SYMM_EXT_DEBUG
-#	define SYMM_ASSERT_MSG(boolean, msg_ptr) shim_assert_msg(boolean, msg_ptr)
-#	define SYMM_ASSERT(boolean)		 shim_assert(boolean)
+#include <Base/errors.h>
+#include <Base/macros.h>
+
+#ifdef SKC_EXTERN_DEBUG
+#	define SKC_ASSERT_MSG(boolean, msg_ptr) Base_assert_msg(boolean, msg_ptr)
+#	define SKC_ASSERT(boolean)		Base_assert(boolean)
 #else
-#	define SYMM_ASSERT_MSG(boolean, msg_ptr) /* Nil */
-#	define SYMM_ASSERT(boolean)		 /* Nil */
+#	define SKC_ASSERT_MSG(boolean, msg_ptr) /* Nil */
+#	define SKC_ASSERT(boolean)		/* Nil */
 #endif
 
-#ifdef SYMM_EXT_STATIC_LIB
-#	define SYMM_API
+#ifdef SKC_EXTERN_STATIC_LIB
+#	define SKC_API /* Nil */
+#	define SKC_API_IS_NIL
 #else
-#	ifdef SYMM_EXT_BUILD_DYNAMIC_LIB
-#		define SYMM_API SHIM_EXPORT_SYMBOL
-#	else /* Assume Symm is being imported as a dynamic lib. */
-#		define SYMM_API SHIM_IMPORT_SYMBOL
+#	ifdef SKC_EXTERN_BUILD_DYNAMIC_LIB
+#		define SKC_API BASE_EXPORT
+#		define SKC_API_IS_EXPORT
+#		ifdef BASE_EXPORT_IS_NIL
+#			define SKC_API_IS_NIL
+#		endif
+#	else /* Assume Skc is being imported as a dynamic lib. */
+#		define SKC_API BASE_IMPORT
+#		define SKC_API_IS_IMPORT
+#		ifdef BASE_IMPORT_IS_NIL
+#			define SKC_API_IS_NIL
+#		endif
 #	endif
 #endif
 
-#endif /* ~ SYMM_MACROS_H */
+#endif /* ~ SKC_MACROS_H */

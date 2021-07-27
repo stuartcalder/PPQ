@@ -1,38 +1,38 @@
-#ifndef SYMM_DRAGONFLY_V1_H
-#define SYMM_DRAGONFLY_V1_H
+#ifndef SKC_DRAGONFLY_V1_H
+#define SKC_DRAGONFLY_V1_H
 
-/* Shim Headers */
-#include <shim/macros.h>
-#include <shim/print.h>
-#include <shim/operations.h>
-#include <shim/map.h>
-/* Symm Headers */
-#include "macros.h"
-#include "graph_hashing.h"
-#include "catena.h"
-#include "threefish512.h"
-#include "csprng.h"
+/* Base Headers */
+#include <Base/macros.h>
+#include <Base/mmap.h>
+#include <Base/operations.h>
+#include <Base/print.h>
+/* Skc Headers */
+#include "catena512.h"
 #include "common.h"
+#include "csprng.h"
+#include "graph_hashing.h"
+#include "macros.h"
+#include "threefish512.h"
 
-#define SYMM_DRAGONFLY_V1_ID				"SSC_DRAGONFLY_V1"
-#define SYMM_DRAGONFLY_V1_BLOCK_BITS			512
-#define SYMM_DRAGONFLY_V1_BLOCK_BYTES			(SYMM_DRAGONFLY_V1_BLOCK_BITS / CHAR_BIT)
-#define SYMM_DRAGONFLY_V1_SALT_BITS			SYMM_CATENA_SALT_BITS
-#define SYMM_DRAGONFLY_V1_SALT_BYTES			SYMM_CATENA_SALT_BYTES
-#define SYMM_DRAGONFLY_V1_MAX_PASSWORD_BYTES		120
-#define SYMM_DRAGONFLY_V1_PLAINTEXT_HEADER_BYTES	(17 + /*Sizeof dragonfly_v1 id*/ \
+#define SKC_DRAGONFLY_V1_ID				"SSC_DRAGONFLY_V1"
+#define SKC_DRAGONFLY_V1_BLOCK_BITS			SKC_THREEFISH512_BLOCK_BITS
+#define SKC_DRAGONFLY_V1_BLOCK_BYTES			SKC_THREEFISH512_BLOCK_BYTES
+#define SKC_DRAGONFLY_V1_SALT_BITS			SKC_CATENA512_SALT_BITS
+#define SKC_DRAGONFLY_V1_SALT_BYTES			SKC_CATENA512_SALT_BYTES
+#define SKC_DRAGONFLY_V1_MAX_PASSWORD_BYTES		120
+#define SKC_DRAGONFLY_V1_PLAINTEXT_HEADER_BYTES		(17 + /*Sizeof dragonfly_v1 id*/ \
 							 8  + /*header size*/ \
 							 4  + /*g_low, g_high, use_phi, lambda*/ \
-							 SYMM_THREEFISH512_TWEAK_BYTES + \
-							 SYMM_DRAGONFLY_V1_SALT_BYTES + \
-							 SYMM_THREEFISH512_CTR_IV_BYTES)
-#define SYMM_DRAGONFLY_V1_CIPHERTEXT_HEADER_BYTES	16
-#define SYMM_DRAGONFLY_V1_TOTAL_HEADER_BYTES		(SYMM_DRAGONFLY_V1_PLAINTEXT_HEADER_BYTES + SYMM_DRAGONFLY_V1_CIPHERTEXT_HEADER_BYTES)
-#define SYMM_DRAGONFLY_V1_MAC_BYTES			SYMM_THREEFISH512_BLOCK_BYTES
-#define SYMM_DRAGONFLY_V1_VISIBLE_METADATA_BYTES	(SYMM_DRAGONFLY_V1_TOTAL_HEADER_BYTES + SYMM_DRAGONFLY_V1_MAC_BYTES)
+							 SKC_THREEFISH512_TWEAK_BYTES + \
+							 SKC_DRAGONFLY_V1_SALT_BYTES + \
+							 SKC_THREEFISH512_CTR_IV_BYTES)
+#define SKC_DRAGONFLY_V1_CIPHERTEXT_HEADER_BYTES	16
+#define SKC_DRAGONFLY_V1_TOTAL_HEADER_BYTES		(SKC_DRAGONFLY_V1_PLAINTEXT_HEADER_BYTES + SKC_DRAGONFLY_V1_CIPHERTEXT_HEADER_BYTES)
+#define SKC_DRAGONFLY_V1_MAC_BYTES			SKC_THREEFISH512_BLOCK_BYTES
+#define SKC_DRAGONFLY_V1_VISIBLE_METADATA_BYTES		(SKC_DRAGONFLY_V1_TOTAL_HEADER_BYTES + SKC_DRAGONFLY_V1_MAC_BYTES)
 
-#define WORD_ALIGN_ SHIM_ALIGNAS (8)
-WORD_ALIGN_ static uint8_t const Symm_Dragonfly_V1_Safe_Metadata [SYMM_THREEFISH512_BLOCK_BYTES] = {
+#define WORD_ALIGN_ BASE_ALIGNAS(uint64_t)
+WORD_ALIGN_ static const uint8_t Skc_Dragonfly_V1_Safe_Metadata  [SKC_THREEFISH512_BLOCK_BYTES] = {
 	0x79,0xb5,0x79,0x1e,0x9a,0xac,0x02,0x64,
 	0x2a,0xaa,0x99,0x1b,0xd5,0x47,0xed,0x14,
 	0x74,0x4d,0x72,0xbf,0x13,0x22,0x54,0xc9,
@@ -42,7 +42,7 @@ WORD_ALIGN_ static uint8_t const Symm_Dragonfly_V1_Safe_Metadata [SYMM_THREEFISH
 	0x7c,0xf2,0x03,0x53,0xfd,0x42,0xa5,0xa3,
 	0x7a,0x0e,0xbb,0xb4,0xa7,0xeb,0xdb,0xab
 };
-WORD_ALIGN_ static uint8_t const Symm_Dragonfly_V1_Strong_Metadata [SYMM_THREEFISH512_BLOCK_BYTES] = {
+WORD_ALIGN_ static const uint8_t Skc_Dragonfly_V1_Strong_Metadata  [SKC_THREEFISH512_BLOCK_BYTES] = {
 	0x1f,0x23,0x89,0x58,0x4a,0x4a,0xbb,0xa5,
 	0x9f,0x09,0xca,0xd4,0xef,0xac,0x43,0x1d,
 	0xde,0x9a,0xb0,0xf8,0x69,0xaa,0x50,0xf3,
@@ -55,51 +55,43 @@ WORD_ALIGN_ static uint8_t const Symm_Dragonfly_V1_Strong_Metadata [SYMM_THREEFI
 
 typedef struct {
 	struct {
-		Symm_Catena_Input	catena_input;
-		Symm_Catena		catena;
-		Symm_Threefish512_CTR	threefish512_ctr;
-		Symm_UBI512		ubi512;
-		uint64_t		enc_key  [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
-		WORD_ALIGN_ uint8_t	auth_key [SYMM_THREEFISH512_BLOCK_BYTES];
-		WORD_ALIGN_ uint8_t	hash_out [SYMM_THREEFISH512_BLOCK_BYTES * 2];
+		Skc_Catena512_Input	input;
+		Skc_Catena512		catena512;
+		Skc_Threefish512_CTR	threefish512_ctr;
+		Skc_UBI512		ubi512;
+		uint64_t		enc_key  [SKC_THREEFISH512_EXTERNAL_KEY_WORDS];
+		WORD_ALIGN_ uint8_t	auth_key [SKC_THREEFISH512_BLOCK_BYTES];
+		WORD_ALIGN_ uint8_t	hash_out [SKC_THREEFISH512_BLOCK_BYTES * 2];
 	} secret;
-	struct {
-		uint64_t	    tf_tweak    [SYMM_THREEFISH512_EXTERNAL_TWEAK_WORDS];
-		WORD_ALIGN_ uint8_t ctr_iv      [SYMM_THREEFISH512_CTR_IV_BYTES];
-		WORD_ALIGN_ uint8_t catena_salt [SYMM_CATENA_SALT_BYTES];
-	} pub;
-} Symm_Dragonfly_V1_Encrypt;
-
-typedef Symm_Dragonfly_V1_Encrypt Symm_Dragonfly_V1; /*FIXME*/
+	uint64_t            tf_tweak       [SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS];
+	WORD_ALIGN_ uint8_t ctr_iv         [SKC_THREEFISH512_CTR_IV_BYTES];
+	WORD_ALIGN_ uint8_t catena512_salt [SKC_CATENA512_SALT_BYTES];
+} Skc_Dragonfly_V1_Encrypt;
 
 typedef struct {
-	Symm_Threefish512_CTR	threefish512_ctr;
-	Symm_UBI512          	ubi512;
-	Symm_Catena          	catena;
-	uint64_t             	enc_key  [SYMM_THREEFISH512_EXTERNAL_KEY_WORDS];
-	WORD_ALIGN_ uint8_t 	auth_key [SYMM_THREEFISH512_BLOCK_BYTES];
-	WORD_ALIGN_ uint8_t 	hash_buf [SYMM_THREEFISH512_BLOCK_BYTES * 2];
-	WORD_ALIGN_ uint8_t 	mac      [SYMM_COMMON_MAC_BYTES];
-	uint8_t              	password [SYMM_COMMON_PASSWORD_BUFFER_BYTES];
+	Skc_Threefish512_CTR	threefish512_ctr;
+	Skc_UBI512          	ubi512;
+	Skc_Catena512          	catena512;
+	uint64_t             	enc_key  [SKC_THREEFISH512_EXTERNAL_KEY_WORDS];
+	WORD_ALIGN_ uint8_t 	auth_key [SKC_THREEFISH512_BLOCK_BYTES];
+	WORD_ALIGN_ uint8_t 	hash_buf [SKC_THREEFISH512_BLOCK_BYTES * 2];
+	WORD_ALIGN_ uint8_t 	mac      [SKC_COMMON_MAC_BYTES];
+	uint8_t              	password [SKC_COMMON_PASSWORD_BUFFER_BYTES];
 	int                  	password_size;
-} Symm_Dragonfly_V1_Decrypt;
+} Skc_Dragonfly_V1_Decrypt;
 
-SHIM_BEGIN_DECLS
-
-SYMM_API void
-symm_dragonfly_v1_encrypt (Symm_Dragonfly_V1 * SHIM_RESTRICT dragonfly_v1_ptr,
-			   Shim_Map * const    SHIM_RESTRICT input_map_ptr,
-			   Shim_Map * const    SHIM_RESTRICT output_map_ptr,
-			   char const * const  SHIM_RESTRICT output_filename);
-SYMM_API void
-symm_dragonfly_v1_decrypt (Symm_Dragonfly_V1_Decrypt * const SHIM_RESTRICT dfly_dcrypt_p,
-			   Shim_Map * const                  SHIM_RESTRICT input_map_p,
-			   Shim_Map * const                  SHIM_RESTRICT output_map_p,
-			   char const * const                SHIM_RESTRICT output_fname);
-SYMM_API void
-symm_dragonfly_v1_dump_header (Shim_Map * const SHIM_RESTRICT input_map_ptr,
-			       char const *     SHIM_RESTRICT filename);
-
-SHIM_END_DECLS
+#define R_(ptr) ptr BASE_RESTRICT
+BASE_BEGIN_DECLS
+SKC_API void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
+                                       R_(Base_MMap*  const)               input_mmap,
+				       R_(Base_MMap*  const)               output_mmap,
+				       R_(const char* const)               output_filepath);
+SKC_API void Skc_Dragonfly_V1_decrypt (R_(Skc_Dragonfly_V1_Decrypt* const) ctx,
+                                       R_(Base_MMap* const)                input_mmap,
+				       R_(Base_MMap* const)                output_mmap,
+				       R_(const char* const)               output_filepath);
+SKC_API void Skc_Dragonfly_V1_dump_header (R_(Base_MMap* const) input_mmap, R_(const char* const) filepath);
+BASE_END_DECLS
+#undef R_
 #undef WORD_ALIGN_
-#endif /* ~ SYMM_DRAGONFLY_V1_H */
+#endif /* ~ SKC_DRAGONFLY_V1_H */

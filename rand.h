@@ -1,20 +1,13 @@
-#ifndef SYMM_RAND_H
-#define SYMM_RAND_H
+#ifndef SKC_RAND_H
+#define SKC_RAND_H
 
-#include "macros.h"
 #include "csprng.h"
+#include "macros.h"
 
-SHIM_BEGIN_DECLS
+BASE_BEGIN_DECLS
+SKC_API uint16_t Skc_rand_u16 (Skc_CSPRNG*);
+SKC_API uint32_t Skc_rand_u32 (Skc_CSPRNG*);
+SKC_API uint64_t Skc_rand_u64 (Skc_CSPRNG*);
+BASE_END_DECLS
 
-#define SYMM_RAND_U_(bits) \
-	SYMM_API uint##bits##_t \
-	symm_rand_u##bits (Symm_CSPRNG *)
-SYMM_RAND_U_(16);
-SYMM_RAND_U_(32);
-SYMM_RAND_U_(64);
-
-SHIM_END_DECLS
-
-
-#undef SYMM_RAND_U_
-#endif /* ~ ifndef SYMM_RAND_H */
+#endif /* ~ ifndef SKC_RAND_H */

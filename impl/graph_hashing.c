@@ -1,20 +1,13 @@
 #include "graph_hashing.h"
 #include "skein512.h"
 
-#define INDEX_HASH_WORD_(u8_ptr, index) \
-	(u8_ptr + ((index) * SYMM_THREEFISH512_BLOCK_BYTES))
-#define COPY_HASH_WORD_(dest, src) \
-	memcpy(dest, src, SYMM_THREEFISH512_BLOCK_BYTES)
-#define HASH_TWO_WORDS_(ubi_ptr, dest, src) \
-	symm_skein512_hash_native(ubi_ptr, \
-				  dest, \
-				  src, \
-				  (SYMM_THREEFISH512_BLOCK_BYTES * 2))
+#define R_(ptr) ptr BASE_RESTRICT
+#define INDEX_(u8p, i)		(u8p + ((i) * SKC_THREEFISH512_BLOCK_BYTES))
+#define COPY_(dest, src) 	memcpy(dest, src, SKC_THREEFISH512_BLOCK_BYTES)
+#define HASH_(ubi_p, dest, src) Skc_Skein512_hash_native(ubi_p, dest, src, (SKC_THREEFISH512_BLOCK_BYTES * 2))
 
-static uint64_t
-bit_reversal_index_ (uint64_t i, uint8_t const garlic)
-{
-	i = shim_swap_64(i);
+static uint64_t bit_reversal_index (uint64_t i, const uint8_t garlic) {
+	i = Base_swap_64(i);
 	i = ((i & UINT64_C(0x0f0f0f0f0f0f0f0f)) << 4) |
 	    ((i & UINT64_C(0xf0f0f0f0f0f0f0f0)) >> 4);
 	i = ((i & UINT64_C(0x3333333333333333)) << 2) |
@@ -24,31 +17,23 @@ bit_reversal_index_ (uint64_t i, uint8_t const garlic)
 	return i >> (64 - garlic);
 }
 
-void
-symm_graph_hash (Symm_UBI512 * SHIM_RESTRICT ubi512_ctx,
-		 uint8_t *     SHIM_RESTRICT temp,
-		 uint8_t *     SHIM_RESTRICT graph_memory,
-		 uint8_t const               garlic,
-		 uint8_t const               lambda)
+void Skc_graph_hash (R_(Skc_UBI512* const) ubi512,
+                     R_(uint8_t* const)    temp,
+		     R_(uint8_t* const)    graph,
+		     const uint8_t         garlic,
+		     const uint8_t         lambda)
 {
-	//uint64_t const garlic_end = (UINT64_C (1) << garlic) - 1;
-	int64_t const garlic_end = (INT64_C(1) << garlic) - 1;
+	const uint64_t garlic_end = (UINT64_C(1) << garlic) - 1;
 	for (uint8_t j = 1; j <= lambda; ++j) {
-		COPY_HASH_WORD_(INDEX_HASH_WORD_(temp, 0),
-				INDEX_HASH_WORD_(graph_memory, garlic_end));
-		COPY_HASH_WORD_(INDEX_HASH_WORD_(temp, 1),
-				INDEX_HASH_WORD_(graph_memory, 0));
-		HASH_TWO_WORDS_(ubi512_ctx,
-				INDEX_HASH_WORD_(graph_memory, 0),
-				INDEX_HASH_WORD_(temp, 0));
-		for (int64_t i = 1; i <= garlic_end; ++i) {
-			COPY_HASH_WORD_ (INDEX_HASH_WORD_ (temp, 0),
-					 INDEX_HASH_WORD_ (graph_memory, (i - 1)));
-			COPY_HASH_WORD_ (INDEX_HASH_WORD_ (temp, 1),
-					 INDEX_HASH_WORD_ (graph_memory, bit_reversal_index_( (uint64_t)i, garlic )));
-			HASH_TWO_WORDS_ (ubi512_ctx,
-					 INDEX_HASH_WORD_ (graph_memory, i),
-					 INDEX_HASH_WORD_ (temp, 0));
+		COPY_(INDEX_(temp, 0), INDEX_(graph, garlic_end));
+		COPY_(INDEX_(temp, 1), INDEX_(graph, 0));
+		HASH_(ubi512, INDEX_(graph, 0), INDEX_(temp, 0));
+		for (uint64_t i = 1; i <= garlic_end; ++i) {
+			COPY_(INDEX_(temp,       0),
+			      INDEX_(graph, (i - 1)));
+			COPY_(INDEX_(temp, 1),
+			      INDEX_(graph, bit_reversal_index(i, garlic)));
+			HASH_(ubi512, INDEX_(graph, i), INDEX_(temp, 0));
 		}
 	}
 }

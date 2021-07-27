@@ -1,32 +1,28 @@
-#ifndef SYMM_SKEIN512_H
-#define SYMM_SKEIN512_H
+#ifndef SKC_SKEIN512_H
+#define SKC_SKEIN512_H
 
-#include <shim/macros.h>
-#include "ubi512.h"
+#include <Base/macros.h>
 #include "macros.h"
+#include "ubi512.h"
 
-SHIM_BEGIN_DECLS
+#define R_(ptr) ptr BASE_RESTRICT
+BASE_BEGIN_DECLS
+SKC_API void Skc_Skein512_hash (R_(Skc_UBI512* const) ubi512,
+                                uint8_t*              bytes_out,
+				const uint8_t*        bytes_in,
+				const uint64_t        num_bytes_in,
+				const uint64_t        num_bytes_out);
+SKC_API void Skc_Skein512_hash_native (R_(Skc_UBI512* const) ubi512,
+                                       uint8_t*              bytes_out,
+				       const uint8_t*        bytes_in,
+				       const uint64_t        num_bytes_in);
+SKC_API void Skc_Skein512_mac (R_(Skc_UBI512* const)    ubi512,
+                               uint8_t*                 bytes_out,
+			       const uint8_t*           bytes_in,
+			       R_(const uint8_t*)       key_in,
+			       const uint64_t           num_bytes_in,
+			       const uint64_t           num_bytes_out);
+BASE_END_DECLS
+#undef R_
 
-SYMM_API void
-symm_skein512_hash (Symm_UBI512 * SHIM_RESTRICT ubi512_ctx,
-      		    uint8_t *                   bytes_out,
-      		    uint8_t const *             bytes_in,
-      		    int64_t const               num_bytes_in,
-      		    int64_t const               num_bytes_out);
-SYMM_API void
-symm_skein512_hash_native (Symm_UBI512 * SHIM_RESTRICT ubi512_ctx,
-	     		   uint8_t *                   bytes_out,
-	     		   uint8_t const *             bytes_in,
-	     		   int64_t const               num_bytes_in);
-SYMM_API void
-symm_skein512_mac (Symm_UBI512 *   SHIM_RESTRICT ubi512_ctx,
-		   uint8_t *                     bytes_out,
-		   uint8_t const *               bytes_in,
-		   uint8_t const * SHIM_RESTRICT key_in,
-		   int64_t const                 num_bytes_in,
-		   int64_t const                 num_bytes_out);
-
-SHIM_END_DECLS
-
-
-#endif // ~ SYMM_SKEIN512_H
+#endif // ~ SKC_SKEIN512_H
