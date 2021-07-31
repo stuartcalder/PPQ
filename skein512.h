@@ -25,4 +25,4 @@ SKC_API void Skc_Skein512_mac (R_(Skc_UBI512* const)    ubi512,
 BASE_END_DECLS
 #undef R_
 
-#endif // ~ SKC_SKEIN512_H
+#endif /* ! */

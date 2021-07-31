@@ -28,4 +28,4 @@ SKC_API void Skc_CSPRNG_get       (R_(Skc_CSPRNG*) ctx, R_(uint8_t*) output, uin
 BASE_END_DECLS
 #undef R_
 
-#endif // ~ SKC_CSPRNG_H
+#endif /* ! */
