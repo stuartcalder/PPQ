@@ -11,6 +11,7 @@ compiler = meson.get_compiler(_LANG)
 os = host_machine.system()
 static = get_option('static') # Are we building a static lib?
 Base_static = get_option('Base_static') # Are we using Base as a static lib?
+lua = get_option('lua') # Are we building Lua bindings?
 
 assert (os in _SUPPORTED_OPERATING_SYSTEMS, 'You are trying to build symm using an unsupported operating system!')
 assert (compiler.get_id() in _SUPPORTED_COMPILERS, 'You are trying to build symm using an unsupported compiler!')
@@ -37,7 +38,7 @@ lang_flags = []
 inc_dir    = []
 if Base_static
   lang_flags += _D + 'BASE_EXTERN_STATIC_LIB'
-  assert(not get_option('lua'), 'Cannot have Lua while building a static library.')
+  assert(not lua, 'Cannot have Lua bindings while building a static library.')
 endif
 if static
   lang_flags += _D + 'SKC_EXTERN_STATIC_LIB'
@@ -68,7 +69,7 @@ if os in _UNIXLIKE_OPERATING_SYSTEMS
   endif
 endif
 
-if get_option('lua')
+if lua
   lang_flags += _D + 'BASE_EXTERN_LUA'
   lang_flags += _D + 'SKC_EXTERN_LUA'
   src += [

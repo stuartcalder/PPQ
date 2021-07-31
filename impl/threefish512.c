@@ -3,7 +3,7 @@
 #define R_(ptr) ptr BASE_RESTRICT
 #define INIT_KEYSCHEDULE_(key, twk) \
 	do { \
-		key[SKC_THREEFISH512_BLOCK_BYTES] = SKC_THREEFISH512_CONSTANT_240 ^ \
+		key[SKC_THREEFISH512_BLOCK_WORDS] = SKC_THREEFISH512_CONSTANT_240 ^ \
 						    key[0] ^ key[1] ^ key[2] ^ key[3] ^ \
 						    key[4] ^ key[5] ^ key[6] ^ key[7]; \
 		twk[2] = twk[0] ^ twk[1]; \

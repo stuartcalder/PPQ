@@ -5,11 +5,11 @@
 #include <Base/macros.h>
 
 #ifdef SKC_EXTERN_DEBUG
-#	define SKC_ASSERT_MSG(boolean, msg_ptr) Base_assert_msg(boolean, msg_ptr)
-#	define SKC_ASSERT(boolean)		Base_assert(boolean)
+#  define SKC_ASSERT(boolean) Base_assert(boolean)
+#  define SKC_ASSERT_MSG(...) Base_assert_msg(__VA_ARGS__)
 #else
-#	define SKC_ASSERT_MSG(boolean, msg_ptr) /* Nil */
-#	define SKC_ASSERT(boolean)		/* Nil */
+#  define SKC_ASSERT(boolean) /* Nil */
+#  define SKC_ASSERT_MSG(...) /* Nil */
 #endif
 
 #ifdef SKC_EXTERN_STATIC_LIB
