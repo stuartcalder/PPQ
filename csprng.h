@@ -14,6 +14,8 @@ typedef struct {
 } Skc_CSPRNG;
 #undef ALIGN_
 
+#define SKC_CSPRNG_NULL_LITERAL (Skc_CSPRNG){0}
+
 #define R_(ptr) ptr BASE_RESTRICT
 BASE_BEGIN_DECLS
 BASE_INLINE void Skc_CSPRNG_init (Skc_CSPRNG* ctx) {

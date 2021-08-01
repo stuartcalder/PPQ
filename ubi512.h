@@ -26,6 +26,8 @@ typedef struct {
 } Skc_UBI512;
 #undef WORD_ALIGN_
 
+#define SKC_UBI512_NULL_LITERAL (Skc_UBI512){0}
+
 #define R_(ptr) ptr BASE_RESTRICT
 BASE_BEGIN_DECLS
 SKC_API void Skc_UBI512_chain_config (R_(Skc_UBI512* const) ctx, const uint64_t num_out_bits);
