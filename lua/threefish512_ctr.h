@@ -1,4 +1,4 @@
-#if !defined(SKC_LUA_THREEFISH512_CTR_H) && defined(SKC_EXTERN_LUA)
+#if !defined(SKC_LUA_THREEFISH512_CTR_H) && defined(BASE_EXTERN_LUA)
 #define SKC_LUA_THREEFISH512_CTR_H
 
 #include <Base/macros.h>

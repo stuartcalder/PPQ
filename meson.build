@@ -5,7 +5,6 @@ _UNIXLIKE_OPERATING_SYSTEMS  = ['openbsd', 'freebsd', 'netbsd', 'darwin', 'linux
 _SUPPORTED_OPERATING_SYSTEMS = _UNIXLIKE_OPERATING_SYSTEMS + ['windows']
 _GCC_COMPATIBLE_COMPILERS    = ['gcc', 'clang']
 _SUPPORTED_COMPILERS         = _GCC_COMPATIBLE_COMPILERS + ['msvc']
-_LUA_VERSION                 = 'lua5.4'
 
 compiler = meson.get_compiler(_LANG)
 os = host_machine.system()
@@ -69,14 +68,34 @@ if os in _UNIXLIKE_OPERATING_SYSTEMS
   endif
 endif
 
+_LIB_DIRS = {
+  'bsd': ['/usr/lib', '/usr/local/lib'],
+  'linux': ['/usr/lib', '/usr/lib64'],
+  'windows': 'C:\lib'
+}
+
+if os in ['openbsd', 'freebsd', 'netbsd', 'darwin']
+  lib_dir = _LIB_DIRS.get('bsd')
+elif os in ['linux', 'windows']
+  lib_dir = _LIB_DIRS.get(os)
+else
+  assert(false, 'Unsupported OS.')
+endif
+
 if lua
   lang_flags += _D + 'BASE_EXTERN_LUA'
-  lang_flags += _D + 'SKC_EXTERN_LUA'
   src += [
 	'impl/lua/lua.c',
 	'impl/lua/threefish512.c'
   ]
-  lib_deps += compiler.find_library(_LUA_VERSION)
+  lua_dep = compiler.find_library('lua5.4', required: false, static: false, dirs: lib_dir)
+  if lua_dep.found()
+    lib_deps += lua_dep
+    lang_flags += _D + 'BASE_EXTERN_LUA_5_4'
+  else
+    lib_deps += compiler.find_library('lua5.3', static: false, dirs: lib_dir)
+    lang_flags += _D + 'BASE_EXTERN_LUA_5_3'
+  endif
 endif
 
 if os in ['openbsd', 'freebsd', 'darwin'] # On OpenBSD, FreeBSD, MacOS, the library dependencies and 'include_install' directory are the same.
