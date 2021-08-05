@@ -85,7 +85,7 @@ int luaopen_Skc_CSPRNG (lua_State* L) {
 				lua_setfield(L, LUA_REGISTRYINDEX, RKEY_);
 				break;
 			default:
-				return luaL_error("Invalid type for field Skc.csprng: %d", type);
+				return luaL_error(L, "Invalid type for field Skc.csprng: %d", type);
 		}
 	}
 	luaL_newlib(L, free_procs);

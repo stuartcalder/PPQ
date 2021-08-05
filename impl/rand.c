@@ -1,7 +1,5 @@
 #include "rand.h"
 
-static uint64_t rand_word;
-
 uint64_t Skc_rand_nat_num (Skc_CSPRNG* csprng, uint64_t nat_max) {
 	const uint64_t num_sections = nat_max + 1;
 	const uint64_t local_limit = UINT64_MAX - (UINT64_MAX % num_sections); /* local_limit % num_sections == 0 */

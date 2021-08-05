@@ -12,8 +12,8 @@ static = get_option('static') # Are we building a static lib?
 Base_static = get_option('Base_static') # Are we using Base as a static lib?
 lua = get_option('lua') # Are we building Lua bindings?
 
-assert (os in _SUPPORTED_OPERATING_SYSTEMS, 'You are trying to build symm using an unsupported operating system!')
-assert (compiler.get_id() in _SUPPORTED_COMPILERS, 'You are trying to build symm using an unsupported compiler!')
+assert (os in _SUPPORTED_OPERATING_SYSTEMS, 'You are trying to build Skc using an unsupported operating system!')
+assert (compiler.get_id() in _SUPPORTED_COMPILERS, 'You are trying to build Skc using an unsupported compiler!')
 
 if os == 'windows' and compiler.get_id() == 'msvc'
 	_D = '/D'
