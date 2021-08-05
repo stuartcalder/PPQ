@@ -101,6 +101,7 @@ endif
 
 if os in ['openbsd', 'freebsd', 'darwin'] # On OpenBSD, FreeBSD, MacOS, the library dependencies and 'include_install' directory are the same.
   include_install = '/usr/local/include'
+  inc_dir += '/usr/local/include'
 elif os == 'netbsd'
   include_install = '/usr/local/include'
   inc_dir += '/usr/pkg/include'

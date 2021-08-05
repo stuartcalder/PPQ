@@ -1,4 +1,4 @@
-#include "lua/csprng.h"
+#include <Skc/lua/csprng.h>
 
 #define MT_		SKC_LUA_CSPRNG_MT
 #define RKEY_		SKC_LUA_CSPRNG_RKEY
