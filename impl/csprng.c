@@ -1,4 +1,5 @@
 #include "csprng.h"
+#include "skein512.h"
 
 #define R_(ptr) ptr BASE_RESTRICT
 

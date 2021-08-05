@@ -4,7 +4,7 @@
 #include <Base/macros.h>
 #include <Base/operations.h>
 #include "macros.h"
-#include "skein512.h"
+#include "ubi512.h"
 
 #define ALIGN_ BASE_ALIGNAS(uint64_t)
 typedef struct {
