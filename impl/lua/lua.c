@@ -4,12 +4,9 @@
 #include <Skc/lua/threefish512_ctr.h>	/* Submodule 1 */
 #include <Skc/lua/csprng.h>		/* Submodule 2 */
 #define NUM_SUBMODULES_ 2
-#define NUM_FREE_PROCS_ 1
+#define NUM_FREE_PROCS_ 3
 #define NUM_RECORDS_	(NUM_SUBMODULES_ + NUM_FREE_PROCS_)
 #define LOAD_SUBMODULE_(L, submodule) BASE_LUA_LOAD_SUBMODULE(L, Skc, submodule)
-
-/* Temporarily disable loading the Threefish512_CTR submodule. */
-#define NUM_RECORDS_TEMP_ 1
 
 /* Free Proc 1 */
 static int skc_lua_random (lua_State* L) {
@@ -59,9 +56,40 @@ static int skc_lua_random (lua_State* L) {
 	}
 	return 1;
 }
+static int skc_lua_reseed (lua_State* L) {
+	Skc_Lua_CSPRNG* csprng;
+	{
+		const int type = lua_getfield(L, LUA_REGISTRYINDEX, SKC_LUA_CSPRNG_RKEY);
+		if (type == LUA_TUSERDATA)
+			csprng = SKC_LUA_CSPRNG_CHECK(L, -1);
+		else 
+			return luaL_error(L, "Failed to load CSPRNG!");
+		lua_pop(L, 1);
+	}
+	const uint8_t* seed;
+	if (!(seed = (const uint8_t*)lua_touserdata(L, 1)))
+		return luaL_error(L, "Invalid pointer!");
+	Skc_CSPRNG_reseed(csprng, seed);
+	return 0;
+}
+static int skc_lua_os_reseed (lua_State* L) {
+	Skc_Lua_CSPRNG* csprng;
+	{
+		const int type = lua_getfield(L, LUA_REGISTRYINDEX, SKC_LUA_CSPRNG_RKEY);
+		if (type == LUA_TUSERDATA)
+			csprng = SKC_LUA_CSPRNG_CHECK(L, -1);
+		else
+			return luaL_error(L, "Failed to load CSPRNG!");
+		lua_pop(L, 1);
+	}
+	Skc_CSPRNG_os_reseed(csprng);
+	return 0;
+}
 
 static const luaL_Reg free_procs[] = {
-	{"random", skc_lua_random}, /* Free Proc 1 */
+	{"random", skc_lua_random},	  /* Free Proc 1 */
+	{"reseed", skc_lua_reseed},	  /* Free Proc 2 */
+	{"os_reseed", skc_lua_os_reseed}, /* Free Proc 3 */
 	{NULL    , NULL}
 };
 
