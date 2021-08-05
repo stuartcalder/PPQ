@@ -87,7 +87,8 @@ if lua
   src += [
 	'impl/lua/lua.c',
 	'impl/lua/threefish512.c',
-	'impl/lua/csprng.c'
+	'impl/lua/csprng.c',
+	'impl/lua/skein512.c'
   ]
   lua_dep = compiler.find_library('lua5.4', required: false, static: false, dirs: lib_dir)
   if lua_dep.found()

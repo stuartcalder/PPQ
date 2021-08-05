@@ -3,7 +3,8 @@
 #include <Skc/lua/lua.h>
 #include <Skc/lua/threefish512_ctr.h>	/* Submodule 1 */
 #include <Skc/lua/csprng.h>		/* Submodule 2 */
-#define NUM_SUBMODULES_ 2
+#include <Skc/lua/skein512.h>		/* Submodule 3 */
+#define NUM_SUBMODULES_ 3
 #define NUM_FREE_PROCS_ 3
 #define NUM_RECORDS_	(NUM_SUBMODULES_ + NUM_FREE_PROCS_)
 #define LOAD_SUBMODULE_(L, submodule) BASE_LUA_LOAD_SUBMODULE(L, Skc, submodule)
@@ -105,5 +106,6 @@ int luaopen_Skc (lua_State* L) {
 	luaL_setfuncs(L, free_procs, 0);
 	LOAD_SUBMODULE_(L, CSPRNG);
 	LOAD_SUBMODULE_(L, Threefish512_CTR);
+	LOAD_SUBMODULE_(L, Skein512);
 	return 1;
 }
