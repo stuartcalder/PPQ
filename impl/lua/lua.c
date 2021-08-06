@@ -5,7 +5,7 @@
 #include <Skc/lua/csprng.h>		/* Submodule 2 */
 #include <Skc/lua/skein512.h>		/* Submodule 3 */
 #define NUM_SUBMODULES_ 3
-#define NUM_FREE_PROCS_ 3
+#define NUM_FREE_PROCS_ 5
 #define NUM_RECORDS_	(NUM_SUBMODULES_ + NUM_FREE_PROCS_)
 #define LOAD_SUBMODULE_(L, submodule) BASE_LUA_LOAD_SUBMODULE(L, Skc, submodule)
 
@@ -57,6 +57,7 @@ static int skc_lua_random (lua_State* L) {
 	}
 	return 1;
 }
+/* Free Proc 2 */
 static int skc_lua_reseed (lua_State* L) {
 	Skc_Lua_CSPRNG* csprng;
 	{
@@ -73,6 +74,7 @@ static int skc_lua_reseed (lua_State* L) {
 	Skc_CSPRNG_reseed(csprng, seed);
 	return 0;
 }
+/* Free Proc 3 */
 static int skc_lua_os_reseed (lua_State* L) {
 	Skc_Lua_CSPRNG* csprng;
 	{
@@ -86,11 +88,87 @@ static int skc_lua_os_reseed (lua_State* L) {
 	Skc_CSPRNG_os_reseed(csprng);
 	return 0;
 }
+/* Free Proc 4 */
+static int choose_from_pseq (lua_State* L) {
+	const int n_args = lua_gettop(L);
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lua_Integer max_v;
+	if (n_args >= 2)
+		max_v = luaL_checkinteger(L, 2);
+	else
+		max_v = 100;
+
+	lua_Integer n;
+	lua_pushcfunction(L, skc_lua_random);
+	lua_pushinteger(L, max_v);
+	if (lua_pcall(L, 1, 1, 0) != LUA_OK)
+		return luaL_error(L, "random failed!");
+	n = luaL_checkinteger(L, -1);
+
+	lua_Integer a = 0;
+	lua_len(L, 1);
+	const lua_Integer seq_len = lua_tointeger(L, -1);
+	/* <- [stack] */
+	for (lua_Integer i = 1; i <= seq_len; ++i) {	/* For each table in the sequence... */
+		if (lua_geti(L, 1, i) == LUA_TTABLE) { /* <-[stack+1] */
+			int to_pop = 2;
+			if (lua_geti(L, -1, 2) == LUA_TNUMBER) /* <-[stack+2] */
+				a += lua_tointeger(L, -1);
+			else
+				return luaL_error(L, "t[2] was not a number!");
+			if (n <= a) {
+				const int t = lua_geti(L, -2, 1); /* <-[stack+3] */
+				++to_pop;
+				switch (t) {
+					case LUA_TNIL:
+					case LUA_TNONE:
+						return luaL_error(L, "No value to return!");
+				}
+				return 1;
+			}
+			lua_pop(L, to_pop);
+		} else /* Erroneously not a table. */
+			return luaL_error(L, "Arg %d of sequence was NOT a table!", i);
+	}
+	return luaL_error(L, "Invalid probability sequence!");
+}
+
+/* Free Proc 5 */
+static int string_reseed (lua_State* L) {
+	Skc_Lua_CSPRNG* csprng;
+	{
+		const int type = lua_getfield(L, LUA_REGISTRYINDEX, SKC_LUA_CSPRNG_RKEY);
+		if (type == LUA_TUSERDATA)
+			csprng = SKC_LUA_CSPRNG_CHECK(L, -1);
+		else
+			return luaL_error(L, "Failed to load CSPRNG!");
+		lua_pop(L, 1);
+	}
+	const uint8_t* seed;
+	size_t         size;
+	if (!(seed = (uint8_t*)luaL_checklstring(L, 1, &size)))
+		return luaL_error(L, "Invalid string!");
+	
+	struct {
+		Skc_UBI512 ubi512;
+		uint8_t    buffer [SKC_THREEFISH512_BLOCK_BYTES];
+	} data;
+
+	Skc_Skein512_hash_native(&data.ubi512,
+				 data.buffer,
+				 seed,
+				 size);
+	Skc_CSPRNG_reseed(csprng, data.buffer);
+	Base_secure_zero(&data, sizeof(data));
+	return 0;
+}
 
 static const luaL_Reg free_procs[] = {
-	{"random", skc_lua_random},	  /* Free Proc 1 */
-	{"reseed", skc_lua_reseed},	  /* Free Proc 2 */
-	{"os_reseed", skc_lua_os_reseed}, /* Free Proc 3 */
+	{"random"          , skc_lua_random},    /* Free Proc 1 */
+	{"reseed"          , skc_lua_reseed},    /* Free Proc 2 */
+	{"os_reseed"       , skc_lua_os_reseed}, /* Free Proc 3 */
+	{"choose_from_pseq", choose_from_pseq},  /* Free Proc 4 */
+	{"string_reseed"   , string_reseed},     /* Free Proc 5 */
 	{NULL    , NULL}
 };
 
@@ -100,12 +178,15 @@ static const luaL_Reg free_procs[] = {
 #ifdef Threefish512_CTR
 #  undef Threefish512_CTR
 #endif
+#ifdef Skein512
+#  undef Skein512
+#endif
 
 int luaopen_Skc (lua_State* L) {
 	lua_createtable(L, 0, NUM_RECORDS_);
-	luaL_setfuncs(L, free_procs, 0);
-	LOAD_SUBMODULE_(L, CSPRNG);
 	LOAD_SUBMODULE_(L, Threefish512_CTR);
+	LOAD_SUBMODULE_(L, CSPRNG);
 	LOAD_SUBMODULE_(L, Skein512);
+	luaL_setfuncs(L, free_procs, 0);
 	return 1;
 }

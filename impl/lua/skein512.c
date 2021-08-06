@@ -79,7 +79,7 @@ static const luaL_Reg skein512_methods[] = {
 	{"hash_native", skein512_hash_native},
 	{"mac"        , skein512_mac},
 	{"__gc"       , skein512_del},
-#ifdef BASE_LUA >= BASE_LUA_5_4
+#if BASE_LUA >= BASE_LUA_5_4
 	{"__close"    , skein512_del},
 #endif
 	{NULL, NULL}
