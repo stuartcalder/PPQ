@@ -3,7 +3,7 @@
 #include "dragonfly_v1.h"
 #include "csprng.h"
 
-#ifdef BASE_HAS_MEMORYLOCKING
+#ifdef BASE_MLOCK_H
 #	define LOCK_MEMORY_(address, size)	Base_mlock_or_die(address, size)
 #	define UNLOCK_MEMORY_(address, size)	Base_munlock_or_die(address, size)
 #else

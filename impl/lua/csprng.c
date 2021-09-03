@@ -33,7 +33,7 @@ static int csprng_get (lua_State* L) {
 }
 static int csprng_del (lua_State* L) {
 	CSPRNG_t* const csprng = CHECK_(L, 1);
-	memset(csprng, 0, sizeof(*csprng));
+	*csprng = NULL_;
 	return 0;
 }
 static int csprng_new (lua_State* L) {

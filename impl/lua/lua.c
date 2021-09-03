@@ -98,12 +98,11 @@ static int choose_from_pseq (lua_State* L) {
 	else
 		max_v = 100;
 
-	lua_Integer n;
 	lua_pushcfunction(L, skc_lua_random);
 	lua_pushinteger(L, max_v);
 	if (lua_pcall(L, 1, 1, 0) != LUA_OK)
 		return luaL_error(L, "random failed!");
-	n = luaL_checkinteger(L, -1);
+	const lua_Integer n = luaL_checkinteger(L, -1);
 
 	lua_Integer a = 0;
 	lua_len(L, 1);
@@ -111,14 +110,12 @@ static int choose_from_pseq (lua_State* L) {
 	/* <- [stack] */
 	for (lua_Integer i = 1; i <= seq_len; ++i) {	/* For each table in the sequence... */
 		if (lua_geti(L, 1, i) == LUA_TTABLE) { /* <-[stack+1] */
-			int to_pop = 2;
 			if (lua_geti(L, -1, 2) == LUA_TNUMBER) /* <-[stack+2] */
 				a += lua_tointeger(L, -1);
 			else
 				return luaL_error(L, "t[2] was not a number!");
-			if (n <= a) {
+			if (a >= n) {
 				const int t = lua_geti(L, -2, 1); /* <-[stack+3] */
-				++to_pop;
 				switch (t) {
 					case LUA_TNIL:
 					case LUA_TNONE:
@@ -126,7 +123,7 @@ static int choose_from_pseq (lua_State* L) {
 				}
 				return 1;
 			}
-			lua_pop(L, to_pop);
+			lua_pop(L, 2);
 		} else /* Erroneously not a table. */
 			return luaL_error(L, "Arg %d of sequence was NOT a table!", i);
 	}
