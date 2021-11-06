@@ -80,8 +80,8 @@ void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
 		}
 		Base_secure_zero(&ctx->secret.catena512, sizeof(ctx->secret.catena512));
 		Base_secure_zero(input->password_buffer, sizeof(input->password_buffer));
-		/* Catena512 will output 512 bits. We will has these 512 bits into 1024 output bits using Skein
-		 * and the first 512 bits as the encryption key, and the second 512 bits as the authentication key.
+		/* Catena512 will output 512 bits. We will hash these 512 bits into 1024 output bits using Skein
+		 * with the first 512 bits as the encryption key, and the second 512 bits as the authentication key.
 		 */
 		Skc_Skein512_hash(&ctx->secret.ubi512,
 		                  ctx->secret.hash_out,

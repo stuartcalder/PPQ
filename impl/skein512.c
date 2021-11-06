@@ -29,18 +29,6 @@ void Skc_Skein512_hash_native (R_(Skc_UBI512* const) ubi512,
 		0x23,0xb5,0x75,0x1a,0xc7,0x12,0x11,0x99,
 		0x33,0xcc,0x0f,0x66,0x0b,0xa4,0x18,0xae
 	};
-	#if 0
-	static const uint64_t init [8] = {
-		UINT64_C(0x4903adff749c51ce),
-		UINT64_C(0x0d95de399746df03),
-		UINT64_C(0x8fd1934127c79bce),
-		UINT64_C(0x9a255629ff352cb1),
-		UINT64_C(0x5db62599df6ca7b0),
-		UINT64_C(0xeabe394ca9d5c3f4),
-		UINT64_C(0x991112c71a75b523),
-		UINT64_C(0xae18a40b660fcc33)
-	};
-	#endif
 	memcpy(ubi512->key_state, init, sizeof(init));
 	Skc_UBI512_chain_message(ubi512, in, num_in);
 	Skc_UBI512_chain_native_output(ubi512, out);

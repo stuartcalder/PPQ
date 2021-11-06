@@ -49,8 +49,10 @@ void Skc_CSPRNG_get (R_(Skc_CSPRNG*) ctx, R_(uint8_t*) output, uint64_t num_byte
 		output    += SKC_THREEFISH512_BLOCK_BYTES;
 		num_bytes -= SKC_THREEFISH512_BLOCK_BYTES;
 	}
-	SKEIN_PRE_CFG_(ubi512_p, ctx->buffer, ctx->seed, sizeof(ctx->seed), sizeof(ctx->buffer));
-	memcpy(ctx->seed, word_0, SKC_THREEFISH512_BLOCK_BYTES);
-	memcpy(output   , word_1, num_bytes);
+	if (num_bytes) {
+		SKEIN_PRE_CFG_(ubi512_p, ctx->buffer, ctx->seed, sizeof(ctx->seed), sizeof(ctx->buffer));
+		memcpy(ctx->seed, word_0, SKC_THREEFISH512_BLOCK_BYTES);
+		memcpy(output   , word_1, num_bytes);
+	}
 	Base_secure_zero(ctx->buffer, sizeof(ctx->buffer));
 }
