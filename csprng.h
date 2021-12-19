@@ -5,6 +5,8 @@
 #include <Base/operations.h>
 #include "macros.h"
 #include "ubi512.h"
+#define R_(p) p BASE_RESTRICT
+BASE_BEGIN_DECLS
 
 #define ALIGN_ BASE_ALIGNAS(uint64_t)
 typedef struct {
@@ -16,8 +18,6 @@ typedef struct {
 
 #define SKC_CSPRNG_NULL_LITERAL (Skc_CSPRNG){0}
 
-#define R_(ptr) ptr BASE_RESTRICT
-BASE_BEGIN_DECLS
 BASE_INLINE void Skc_CSPRNG_init (Skc_CSPRNG* ctx) {
 	Base_get_os_entropy(ctx->seed, sizeof(ctx->seed));
 }

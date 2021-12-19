@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Base/macros.h>
+#include <Base/mem.h>
 #include <Base/operations.h>
 #include "macros.h"
 
@@ -25,6 +26,9 @@
 #define SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS	(SKC_THREEFISH512_TWEAK_WORDS + 1)
 #define SKC_THREEFISH512_CONSTANT_240		UINT64_C(0x1bd11bdaa9fc1a22)
 #define SKC_THREEFISH512_CTR_IV_BYTES		32
+
+#define R_(p) p BASE_RESTRICT
+BASE_BEGIN_DECLS
 
 /* Threefish-512 with a precomputed key schedule.
  *	Good for instances when you want to encrypt lots of data with one key.*/
@@ -55,8 +59,6 @@ typedef struct {
 
 #define SKC_THREEFISH512_CTR_NULL_LITERAL (Skc_Threefish512_CTR){0}
 
-#define R_(ptr) ptr BASE_RESTRICT
-BASE_BEGIN_DECLS
 /* Base Threefish procedures. */
 SKC_API void Skc_Threefish512_Static_init (R_(Skc_Threefish512_Static* const) ctx,
                                            R_(uint64_t* const)                key,

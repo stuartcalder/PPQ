@@ -17,6 +17,8 @@
 #define SKC_CATENA512_DOMAIN_KDF		UINT8_C(1)
 #define SKC_CATENA512_DOMAIN_POW		UINT8_C(2)
 #define SKC_CATENA512_MHF_TEMP_BYTES		SKC_GRAPH_HASHING_TEMP_BYTES
+#define R_(p) p BASE_RESTRICT
+BASE_BEGIN_DECLS
 
 enum {
 	SKC_CATENA512_SUCCESS,
@@ -43,8 +45,6 @@ typedef struct {
 } Skc_Catena512;
 #undef ALIGN_
 
-#define R_(ptr) ptr BASE_RESTRICT
-BASE_BEGIN_DECLS
 SKC_API int Skc_Catena512_without_phi (R_(Skc_Catena512*) ctx,
                                        R_(uint8_t*)       output,
 				       R_(uint8_t*)       password,

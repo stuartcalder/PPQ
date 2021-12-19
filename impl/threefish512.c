@@ -1,33 +1,102 @@
+#include <Base/mem.h>
 #include "threefish512.h"
+#include <stdint.h>
 
 #define R_(ptr) ptr BASE_RESTRICT
-#define INIT_KEYSCHEDULE_(key, twk) \
-	do { \
-		key[SKC_THREEFISH512_BLOCK_WORDS] = SKC_THREEFISH512_CONSTANT_240 ^ \
-						    key[0] ^ key[1] ^ key[2] ^ key[3] ^ \
-						    key[4] ^ key[5] ^ key[6] ^ key[7]; \
-		twk[2] = twk[0] ^ twk[1]; \
-	} while (0)
+/*
+#define INIT_KEYSCHEDULE_(key, twk) do { \
+  uint64_t i0, i1, i2, i3, i4, i5, i6, i7, all; \
+  i0 = SKC_LOAD_LE64(key + 0); \
+  i1 = SKC_LOAD_LE64(key + 1); \
+  i2 = SKC_LOAD_LE64(key + 2); \
+  i3 = SKC_LOAD_LE64(key + 3); \
+  i4 = SKC_LOAD_LE64(key + 4); \
+  i5 = SKC_LOAD_LE64(key + 5); \
+  i6 = SKC_LOAD_LE64(key + 6); \
+  i7 = SKC_LOAD_LE64(key + 7); \
+  all = (SKC_THREEFISH512_CONSTANT_240 ^ \
+         i0 ^ i1 ^ i2 ^ i3 ^ i4 ^ i5 ^ i6 ^ i7); \
+  SKC_STORE_LE64(key + SKC_THREEFISH512_KEY_WORDS, all); \
+  twk[2] = twk[0] ^ twk[1]; \
+} while (0)
+*/
+#define INIT_KEYSCHEDULE_(key, twk) do { \
+  Base_store_le64(key + SKC_THREEFISH512_KEY_WORDS, \
+                  SKC_THREEFISH512_CONSTANT_240 ^ \
+		  Base_load_le64(key + 0) ^ \
+		  Base_load_le64(key + 1) ^ \
+		  Base_load_le64(key + 2) ^ \
+		  Base_load_le64(key + 3) ^ \
+		  Base_load_le64(key + 4) ^ \
+		  Base_load_le64(key + 5) ^ \
+		  Base_load_le64(key + 6) ^ \
+		  Base_load_le64(key + 7)); \
+  Base_store_le64(twk + 2, (Base_load_le64(twk + 0) ^ Base_load_le64(twk + 1))); \
+} while (0)
+/*
+#define INIT_KEYSCHEDULE_(key, twk) do { \
+  uint64_t val = SKC_THREEFISH512_CONSTANT_240; \
+  val ^= SKC_LOAD_LE64(key + 0); \
+  val ^= SKC_LOAD_LE64(key + 1); \
+  val ^= SKC_LOAD_LE64(key + 2); \
+  val ^= SKC_LOAD_LE64(key + 3); \
+  val ^= SKC_LOAD_LE64(key + 4); \
+  val ^= SKC_LOAD_LE64(key + 5); \
+  val ^= SKC_LOAD_LE64(key + 6); \
+  val ^= SKC_LOAD_LE64(key + 7); \
+  SKC_STORE_LE64((key + SKC_THREEFISH512_KEY_WORDS), val); \
+  val  = SKC_LOAD_LE64(twk + 0); \
+  val ^= SKC_LOAD_LE64(twk + 1); \
+  SKC_STORE_LE64((twk + 2), val); \
+} while (0)
+*/
 
 typedef Skc_Threefish512_Static  Static_t;
 typedef Skc_Threefish512_Dynamic Dynamic_t;
 typedef Skc_Threefish512_CTR     Ctr_t;
 
 void Skc_Threefish512_Static_init (R_(Static_t* const) ctx, R_(uint64_t* const) key, R_(uint64_t* const) twk) {
-#define MAKE_WORD_(key, subkey, i) key[((subkey) + i) % (SKC_THREEFISH512_BLOCK_WORDS + 1)]
-#define SET_WORD_(subkey, i) ctx->key_schedule[((subkey) * SKC_THREEFISH512_BLOCK_WORDS) + i] = MAKE_WORD_(key, (subkey), i)
+/*
+#define LOAD_WORD_(key, subkey, i) SKC_LOAD_LE64(key + (((subkey) + i) % SKC_THREEFISH512_EXTERNAL_KEY_WORDS))
+#define STORE_WORD_(subkey, i, add) do { \
+  uint64_t w = LOAD_WORD_(key, (subkey), i); \
+  uint64_t a = add; \
+  w += a; \
+  SKC_STORE_LE64(ctx->key_schedule + (((subkey) * SKC_THREEFISH512_BLOCK_WORDS) + i), w); \
+} while (0) */
+#define LOAD_WORD_(key, subkey, i) Base_load_le64(key + (((subkey) + i) % SKC_THREEFISH512_EXTERNAL_KEY_WORDS))
+#define STORE_WORD_(subkey, i, add) \
+  Base_store_le64(ctx->key_schedule + (((subkey) * SKC_THREEFISH512_BLOCK_WORDS) + i), \
+                  LOAD_WORD_(key, (subkey), i) + add)
+
+#define MAKE_SUBKEY_(subkey) \
+  STORE_WORD_(subkey, 0, UINT64_C(0)); \
+  STORE_WORD_(subkey, 1, UINT64_C(0)); \
+  STORE_WORD_(subkey, 2, UINT64_C(0)); \
+  STORE_WORD_(subkey, 3, UINT64_C(0)); \
+  STORE_WORD_(subkey, 4, UINT64_C(0)); \
+  STORE_WORD_(subkey, 5, Base_load_le64(twk + ((subkey) % 3))); \
+  STORE_WORD_(subkey, 6, Base_load_le64(twk + (((subkey) + 1) % 3))); \
+  STORE_WORD_(subkey, 7, (subkey))
+
+   #if 0
 #define MAKE_SUBKEY_(subkey) do { \
-		SET_WORD_(subkey, 0); \
-		SET_WORD_(subkey, 1); \
-		SET_WORD_(subkey, 2); \
-		SET_WORD_(subkey, 3); \
-		SET_WORD_(subkey, 4); \
-		SET_WORD_(subkey, 5) + twk[(subkey) % 3]; \
-		SET_WORD_(subkey, 6) + twk[((subkey) + 1) % 3]; \
-		SET_WORD_(subkey, 7) + (subkey); \
-	} while (0)
+  STORE_WORD_(subkey, 0, 0); \
+  STORE_WORD_(subkey, 1, 0); \
+  STORE_WORD_(subkey, 2, 0); \
+  STORE_WORD_(subkey, 3, 0); \
+  STORE_WORD_(subkey, 4, 0); \
+  /*STORE_WORD_(subkey, 5, Skc_load_le64(twk + ((subkey) % 3)));*/ \
+  STORE_WORD_(subkey, 5, SKC_LOAD_LE64(twk + ((subkey) % 3))); \
+  /*STORE_WORD_(subkey, 6, Skc_load_le64(twk + (((subkey) + 1) % 3)));*/ \
+  STORE_WORD_(subkey, 6, SKC_LOAD_LE64(twk + (((subkey) + 1) % 3))); \
+  STORE_WORD_(subkey, 7, (subkey)); \
+} while (0)
+   #endif
+
+
 #define MAKE_4_SUBKEYS_(start_skey) do { \
-		MAKE_SUBKEY_(start_skey); \
+		MAKE_SUBKEY_(start_skey + 0); \
 		MAKE_SUBKEY_(start_skey + 1); \
 		MAKE_SUBKEY_(start_skey + 2); \
 		MAKE_SUBKEY_(start_skey + 3); \
@@ -43,7 +112,8 @@ void Skc_Threefish512_Static_init (R_(Static_t* const) ctx, R_(uint64_t* const) 
 	MAKE_SUBKEY_(18);
 }
 
-static const int ROTATE_ [8][4] = {
+/* Prepare to deprecate this. */
+static const int_fast8_t ROTATE_ [8][4] = {
 	{46, 36, 19, 37},
 	{33, 27, 14, 42},
 	{17, 49, 36, 39},
@@ -56,23 +126,47 @@ static const int ROTATE_ [8][4] = {
 
 void Skc_Threefish512_Static_encipher (R_(Static_t* const) ctx, uint8_t* const ctext, const uint8_t* const ptext) {
 #define GET_ROT_(round, index) (ROTATE_[round % 8][index])
-#define MIX_(w0, w1, round, index) do { \
-		w0 += w1; \
-		w1 = BASE_ROT_LEFT(w1, GET_ROT_(round, index), 64) ^ w0; \
-	} while (0)
-#define DO_MIX_(round, index) MIX_(ctx->state[index * 2], ctx->state[(index * 2) + 1], round, index);
-#define SUBKEY_INDEX_(round) (round / 4)
+#define DO_MIX_(idx, rot_const) do { \
+  uint64_t w0, w1; \
+  w0 = Base_load_le64(ctx->state + ((idx) * 2)); \
+  w1 = Base_load_le64(ctx->state + (((idx) * 2) + 1)); \
+  w0 += w1; \
+  Base_store_le64(ctx->state + ((idx) * 2), w0); \
+  w1 = BASE_ROT_LEFT(w1, (rot_const), 64) ^ w0; \
+  Base_store_le64(ctx->state + (((idx) * 2) + 1), w1); \
+} while (0)
+#define SUBKEY_INDEX_(round) ((round) / 4)
 #define SUBKEY_OFFSET_(round) (SUBKEY_INDEX_(round) * SKC_THREEFISH512_BLOCK_WORDS)
-#define USE_SUBKEY_(op, round) do { \
-		ctx->state[0] op ctx->key_schedule[(SUBKEY_OFFSET_(round) + 0)]; \
-		ctx->state[1] op ctx->key_schedule[(SUBKEY_OFFSET_(round) + 1)]; \
-		ctx->state[2] op ctx->key_schedule[(SUBKEY_OFFSET_(round) + 2)]; \
-		ctx->state[3] op ctx->key_schedule[(SUBKEY_OFFSET_(round) + 3)]; \
-		ctx->state[4] op ctx->key_schedule[(SUBKEY_OFFSET_(round) + 4)]; \
-		ctx->state[5] op ctx->key_schedule[(SUBKEY_OFFSET_(round) + 5)]; \
-		ctx->state[6] op ctx->key_schedule[(SUBKEY_OFFSET_(round) + 6)]; \
-		ctx->state[7] op ctx->key_schedule[(SUBKEY_OFFSET_(round) + 7)]; \
-	} while (0)
+#define SKO_(rnd) SUBKEY_OFFSET_(rnd)
+#define USE_SUBKEY_(op, rnd) do { \
+  uint64_t st, ks; \
+  st = Base_load_le64(ctx->state + 0); \
+  ks = Base_load_le64(ctx->key_schedule + (SKO_(rnd) + 0)); \
+  Base_store_le64(ctx->state + 0, st op ks); \
+  st = Base_load_le64(ctx->state + 1); \
+  ks = Base_load_le64(ctx->key_schedule + (SKO_(rnd) + 1)); \
+  Base_store_le64(ctx->state + 1, st op ks); \
+  st = Base_load_le64(ctx->state + 2); \
+  ks = Base_load_le64(ctx->key_schedule + (SKO_(rnd) + 2)); \
+  Base_store_le64(ctx->state + 2, st op ks); \
+  st = Base_load_le64(ctx->state + 3); \
+  ks = Base_load_le64(ctx->key_schedule + (SKO_(rnd) + 3)); \
+  Base_store_le64(ctx->state + 3, st op ks); \
+  st = Base_load_le64(ctx->state + 4); \
+  ks = Base_load_le64(ctx->key_schedule + (SKO_(rnd) + 4)); \
+  Base_store_le64(ctx->state + 4, st op ks); \
+  st = Base_load_le64(ctx->state + 5); \
+  ks = Base_load_le64(ctx->key_schedule + (SKO_(rnd) + 5)); \
+  Base_store_le64(ctx->state + 5, st op ks); \
+  st = Base_load_le64(ctx->state + 6); \
+  ks = Base_load_le64(ctx->key_schedule + (SKO_(rnd) + 6)); \
+  Base_store_le64(ctx->state + 6, st op ks); \
+  st = Base_load_le64(ctx->state + 7); \
+  ks = Base_load_le64(ctx->key_schedule + (SKO_(rnd) + 7)); \
+  Base_store_le64(ctx->state + 7, st op ks); \
+} while (0)
+#define ADD_SUBKEY_(rnd)      USE_SUBKEY_(+, rnd)
+#define SUBTRACT_SUBKEY_(rnd) USE_SUBKEY_(-, rnd)
 #define PERMUTE_ do { \
 		uint64_t w0, w1; \
 		w0 = ctx->state[6]; \
@@ -86,41 +180,58 @@ void Skc_Threefish512_Static_encipher (R_(Static_t* const) ctx, uint8_t* const c
 		ctx->state[3] = ctx->state[7]; \
 		ctx->state[7] = w0; \
 	} while (0)
-#define MIX_PERM_(round) \
-	DO_MIX_(round, 0); \
-	DO_MIX_(round, 1); \
-	DO_MIX_(round, 2); \
-	DO_MIX_(round, 3); \
-	PERMUTE_
+#define MIX4_PERM_(rc0, rc1, rc2, rc3) \
+ DO_MIX_(0, rc0); DO_MIX_(1, rc1); \
+ DO_MIX_(2, rc2); DO_MIX_(3, rc3); \
+ PERMUTE_
+#define ENC_ROUND_(rnd_start, rc0_0, rc0_1, rc0_2, rc0_3, \
+                              rc1_0, rc1_1, rc1_2, rc1_3, \
+			      rc2_0, rc2_1, rc2_2, rc2_3, \
+			      rc3_0, rc3_1, rc3_2, rc3_3) \
+ ADD_SUBKEY_(rnd_start); \
+ MIX4_PERM_(rc0_0, rc0_1, rc0_2, rc0_3); \
+ MIX4_PERM_(rc1_0, rc1_1, rc1_2, rc1_3); \
+ MIX4_PERM_(rc2_0, rc2_1, rc2_2, rc2_3); \
+ MIX4_PERM_(rc3_0, rc3_1, rc3_2, rc3_3)
+#define ENC_ROUND_PHASE_0_(rnd_start) ENC_ROUND_(rnd_start, 46, 36, 19, 37, \
+                                                            33, 27, 14, 42, \
+							    17, 49, 36, 39, \
+							    44,  9, 54, 56)
+#define ENC_ROUND_PHASE_1_(rnd_start) ENC_ROUND_(rnd_start, 39, 30, 34, 24, \
+                                                            13, 50, 10, 17, \
+							    25, 29, 39, 43, \
+							     8, 35, 56, 22)
+   #if 0
 #define ENC_ROUND_(round_start) do { \
-		USE_SUBKEY_(+=, round_start); \
+		ADD_SUBKEY_(round_start); \
 		MIX_PERM_(round_start); \
 		MIX_PERM_((round_start + 1)); \
 		MIX_PERM_((round_start + 2)); \
 		MIX_PERM_((round_start + 3)); \
 	} while (0)
+   #endif
 
 	BASE_STATIC_ASSERT(sizeof(ctx->state) == SKC_THREEFISH512_BLOCK_BYTES, "State is one threefish512 block.");
 	memcpy(ctx->state, ptext, sizeof(ctx->state));
-	ENC_ROUND_(0);
-	ENC_ROUND_(4);
-	ENC_ROUND_(8);
-	ENC_ROUND_(12);
-	ENC_ROUND_(16);
-	ENC_ROUND_(20);
-	ENC_ROUND_(24);
-	ENC_ROUND_(28);
-	ENC_ROUND_(32);
-	ENC_ROUND_(36);
-	ENC_ROUND_(40);
-	ENC_ROUND_(44);
-	ENC_ROUND_(48);
-	ENC_ROUND_(52);
-	ENC_ROUND_(56);
-	ENC_ROUND_(60);
-	ENC_ROUND_(64);
-	ENC_ROUND_(68);
-	USE_SUBKEY_(+=, 72);
+	ENC_ROUND_PHASE_0_(0);
+	ENC_ROUND_PHASE_1_(4);
+	ENC_ROUND_PHASE_0_(8);
+	ENC_ROUND_PHASE_1_(12);
+	ENC_ROUND_PHASE_0_(16);
+	ENC_ROUND_PHASE_1_(20);
+	ENC_ROUND_PHASE_0_(24);
+	ENC_ROUND_PHASE_1_(28);
+	ENC_ROUND_PHASE_0_(32);
+	ENC_ROUND_PHASE_1_(36);
+	ENC_ROUND_PHASE_0_(40);
+	ENC_ROUND_PHASE_1_(44);
+	ENC_ROUND_PHASE_0_(48);
+	ENC_ROUND_PHASE_1_(52);
+	ENC_ROUND_PHASE_0_(56);
+	ENC_ROUND_PHASE_1_(60);
+	ENC_ROUND_PHASE_0_(64);
+	ENC_ROUND_PHASE_1_(68);
+	ADD_SUBKEY_(72);
 	memcpy(ctext, ctx->state, sizeof(ctx->state));
 }
 
@@ -132,36 +243,96 @@ void Skc_Threefish512_Dynamic_init (R_(Dynamic_t* const) ctx, R_(uint64_t* const
 
 void Skc_Threefish512_Dynamic_encipher (R_(Dynamic_t* const) ctx, uint8_t* const ctext, const uint8_t* const ptext) {
 #undef USE_SUBKEY_
-#define USE_SUBKEY_(op, round) do { \
-		ctx->state[0] op (MAKE_WORD_(ctx->extern_key, SUBKEY_INDEX_(round), 0)); \
-		ctx->state[1] op (MAKE_WORD_(ctx->extern_key, SUBKEY_INDEX_(round), 1)); \
-		ctx->state[2] op (MAKE_WORD_(ctx->extern_key, SUBKEY_INDEX_(round), 2)); \
-		ctx->state[3] op (MAKE_WORD_(ctx->extern_key, SUBKEY_INDEX_(round), 3)); \
-		ctx->state[4] op (MAKE_WORD_(ctx->extern_key, SUBKEY_INDEX_(round), 4)); \
-		ctx->state[5] op (MAKE_WORD_(ctx->extern_key, SUBKEY_INDEX_(round), 5) + ctx->extern_tweak[SUBKEY_INDEX_(round) % 3]); \
-		ctx->state[6] op (MAKE_WORD_(ctx->extern_key, SUBKEY_INDEX_(round), 6) + ctx->extern_tweak[(SUBKEY_INDEX_(round) + 1) % 3]); \
-		ctx->state[7] op (MAKE_WORD_(ctx->extern_key, SUBKEY_INDEX_(round), 7) + SUBKEY_INDEX_(round)); \
-	} while (0)
+#define USE_SUBKEY_(op, rnd) do { \
+  uint64_t st, ek, et; \
+  st = Base_load_le64(ctx->state); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 0); \
+  Base_store_le64(ctx->state, st op ek); \
+  st = Base_load_le64(ctx->state + 1); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 1); \
+  Base_store_le64(ctx->state + 1, st op ek); \
+  st = Base_load_le64(ctx->state + 2); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 2); \
+  Base_store_le64(ctx->state + 2, st op ek); \
+  st = Base_load_le64(ctx->state + 3); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 3); \
+  Base_store_le64(ctx->state + 3, st op ek); \
+  st = Base_load_le64(ctx->state + 4); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 4); \
+  Base_store_le64(ctx->state + 4, st op ek); \
+  st = Base_load_le64(ctx->state + 5); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 5); \
+  et = Base_load_le64(ctx->extern_tweak + (SUBKEY_INDEX_(rnd) % 3)); \
+  Base_store_le64(ctx->state + 5, st op (ek + et)); \
+  st = Base_load_le64(ctx->state + 6); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 6); \
+  et = Base_load_le64(ctx->extern_tweak + ((SUBKEY_INDEX_(rnd) + 1) % 3)); \
+  Base_store_le64(ctx->state + 6, st op (ek + et)); \
+  st = Base_load_le64(ctx->state + 7); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 7); \
+  et = SUBKEY_INDEX_(rnd); \
+  Base_store_le64(ctx->state + 7, st op (ek + et)); \
+} while (0)
+   #if 0
+#define USE_SUBKEY_(op, rnd) do { \
+  uint64_t st, ek, et; \
+  st = SKC_LOAD_LE64(ctx->state + 0); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 0); \
+  st = st op ek; \
+  SKC_STORE_LE64(ctx->state + 0, st); \
+  st = SKC_LOAD_LE64(ctx->state + 1); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 1); \
+  st = st op ek; \
+  SKC_STORE_LE64(ctx->state + 1, st); \
+  st = SKC_LOAD_LE64(ctx->state + 2); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 2); \
+  st = st op ek; \
+  SKC_STORE_LE64(ctx->state + 2, st); \
+  st = SKC_LOAD_LE64(ctx->state + 3); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 3); \
+  st = st op ek; \
+  SKC_STORE_LE64(ctx->state + 3, st); \
+  st = SKC_LOAD_LE64(ctx->state + 4); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 4); \
+  st = st op ek; \
+  SKC_STORE_LE64(ctx->state + 4, st); \
+  st = SKC_LOAD_LE64(ctx->state + 5); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 5); \
+  et = SKC_LOAD_LE64(ctx->extern_tweak + (SUBKEY_INDEX_(rnd) % 3)); \
+  st = st op (ek + et); \
+  SKC_STORE_LE64(ctx->state + 5, st); \
+  st = SKC_LOAD_LE64(ctx->state + 6); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 6); \
+  et = SKC_LOAD_LE64(ctx->extern_tweak + ((SUBKEY_INDEX_(rnd) + 1) % 3)); \
+  st = st op (ek + et); \
+  SKC_STORE_LE64(ctx->state + 6, st); \
+  st = SKC_LOAD_LE64(ctx->state + 7); \
+  ek = LOAD_WORD_(ctx->extern_key, SUBKEY_INDEX_(rnd), 7); \
+  et = SUBKEY_INDEX_(rnd); \
+  st = st op (ek + et); \
+  SKC_STORE_LE64(ctx->state + 7, st); \
+} while (0)
+   #endif
 	memcpy(ctx->state, ptext, sizeof(ctx->state));
-	ENC_ROUND_(0);
-	ENC_ROUND_(4);
-	ENC_ROUND_(8);
-	ENC_ROUND_(12);
-	ENC_ROUND_(16);
-	ENC_ROUND_(20);
-	ENC_ROUND_(24);
-	ENC_ROUND_(28);
-	ENC_ROUND_(32);
-	ENC_ROUND_(36);
-	ENC_ROUND_(40);
-	ENC_ROUND_(44);
-	ENC_ROUND_(48);
-	ENC_ROUND_(52);
-	ENC_ROUND_(56);
-	ENC_ROUND_(60);
-	ENC_ROUND_(64);
-	ENC_ROUND_(68);
-	USE_SUBKEY_(+=, 72);
+	ENC_ROUND_PHASE_0_(0);
+	ENC_ROUND_PHASE_1_(4);
+	ENC_ROUND_PHASE_0_(8);
+	ENC_ROUND_PHASE_1_(12);
+	ENC_ROUND_PHASE_0_(16);
+	ENC_ROUND_PHASE_1_(20);
+	ENC_ROUND_PHASE_0_(24);
+	ENC_ROUND_PHASE_1_(28);
+	ENC_ROUND_PHASE_0_(32);
+	ENC_ROUND_PHASE_1_(36);
+	ENC_ROUND_PHASE_0_(40);
+	ENC_ROUND_PHASE_1_(44);
+	ENC_ROUND_PHASE_0_(48);
+	ENC_ROUND_PHASE_1_(52);
+	ENC_ROUND_PHASE_0_(56);
+	ENC_ROUND_PHASE_1_(60);
+	ENC_ROUND_PHASE_0_(64);
+	ENC_ROUND_PHASE_1_(68);
+	ADD_SUBKEY_(72);
 	memcpy(ctext, ctx->state, sizeof(ctx->state));
 }
 
@@ -173,20 +344,20 @@ void Skc_Threefish512_CTR_init (R_(Ctr_t* const) ctx, R_(const uint8_t* const) i
 }
 
 void Skc_Threefish512_CTR_xor_keystream (R_(Ctr_t* const) ctx, uint8_t* output, const uint8_t* input, uint64_t input_size, uint64_t start_byte) {
-#define INC_U64_(keystream) BASE_BIT_CAST_OP(keystream, uint64_t, tmp, ++tmp)
+#define INC_U64_(u64p) Base_store_le64(u64p, Base_load_le64(u64p) + 1)
 	if (!start_byte)
 		memset(ctx->keystream, 0, sizeof(uint64_t));
 	else {
 		uint64_t starting_block = start_byte / SKC_THREEFISH512_BLOCK_BYTES;
 		int      offset         = start_byte % SKC_THREEFISH512_BLOCK_BYTES;
 		int      bytes          = SKC_THREEFISH512_BLOCK_BYTES - offset;
-		memcpy(ctx->keystream, &starting_block, sizeof(starting_block));
+		Base_store_le64(ctx->keystream, starting_block);
 		Skc_Threefish512_Static_encipher(&ctx->threefish512, ctx->buffer, ctx->keystream);
 		INC_U64_(ctx->keystream);
 		uint8_t* off = ctx->buffer + offset;
 		int left;
 		if (input_size >= (uint64_t)bytes)
-			left = bytes;
+			left = (int)bytes;
 		else
 			left = (int)input_size;
 		for (int i = 0; i < left; ++i)
@@ -207,7 +378,7 @@ void Skc_Threefish512_CTR_xor_keystream (R_(Ctr_t* const) ctx, uint8_t* output, 
 	}
 	if (input_size) {
 		Skc_Threefish512_Static_encipher(&ctx->threefish512, ctx->buffer, ctx->keystream);
-		for (int i = 0; i < (int)input_size; ++i)
+		for (int_fast8_t i = 0; i < input_size; ++i)
 			ctx->buffer[i] ^= input[i];
 		memcpy(output, ctx->buffer, input_size);
 	}

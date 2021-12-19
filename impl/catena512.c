@@ -3,6 +3,7 @@
 #include "catena512.h"
 #include "macros.h"
 #include "skein512.h"
+#include <Base/mem.h>
 
 #define R_(ptr) ptr BASE_RESTRICT
 #define ALIGN_ BASE_ALIGNAS(uint64_t)
@@ -49,13 +50,10 @@ void make_tweak_without_phi (R_(Skc_Catena512*) ctx, const uint8_t lambda) {
 	t += SKC_THREEFISH512_BLOCK_BYTES;
 	(*t++) = SKC_CATENA512_DOMAIN_KDF;
 	(*t++) = lambda;
-	{
-		uint16_t tmp = SKC_THREEFISH512_BLOCK_BYTES;
-		memcpy(t, &tmp, sizeof(tmp));
-		t += sizeof(tmp);
-		tmp = SKC_CATENA512_SALT_BYTES;
-		memcpy(t, &tmp, sizeof(tmp));
-	}
+	(*t++) = (uint8_t)SKC_THREEFISH512_BLOCK_BYTES;
+	(*t++) = (uint8_t)((unsigned)SKC_THREEFISH512_BLOCK_BYTES >> 8);
+	(*t++) = (uint8_t)SKC_CATENA512_SALT_BYTES;
+	*t     = (uint8_t)((unsigned)SKC_CATENA512_SALT_BYTES >> 8);
 }
 void make_tweak_with_phi (R_(Skc_Catena512*) ctx, const uint8_t lambda) {
 	uint8_t* t = ctx->temp.tw_pw_salt;
@@ -63,13 +61,10 @@ void make_tweak_with_phi (R_(Skc_Catena512*) ctx, const uint8_t lambda) {
 	t += SKC_THREEFISH512_BLOCK_BYTES;
 	(*t++) = SKC_CATENA512_DOMAIN_KDF;
 	(*t++) = lambda;
-	{
-		uint16_t tmp = SKC_THREEFISH512_BLOCK_BYTES;
-		memcpy(t, &tmp, sizeof(tmp));
-		t  += sizeof(tmp);
-		tmp = SKC_CATENA512_SALT_BYTES;
-		memcpy(t, &tmp, sizeof(tmp));
-	}
+	(*t++) = (uint8_t)SKC_THREEFISH512_BLOCK_BYTES;
+	(*t++) = (uint8_t)((unsigned)SKC_THREEFISH512_BLOCK_BYTES >> 8);
+	(*t++) = (uint8_t)SKC_CATENA512_SALT_BYTES;
+	*t     = (uint8_t)((unsigned)SKC_CATENA512_SALT_BYTES >> 8);
 }
 void flap_without_phi (R_(Skc_Catena512*) ctx, const uint8_t garlic, const uint8_t lambda) {
 #define TEMP_	ctx->temp.flap
@@ -164,16 +159,22 @@ void phi (R_(Skc_Catena512*) ctx, const uint8_t garlic) {
 #define TEMP_  ctx->temp.phi
 #define X_     ctx->x
 
-	const uint64_t last_word_index = (UINT64_C (1) << garlic) - 1;
+	const uint64_t last_word_index = (UINT64_C(1) << garlic) - 1;
 	const int right_shift_amt = 64 - garlic;
-	uint64_t j;
-	memcpy(&j, INDEX_(GRAPH_, last_word_index), sizeof(j));
-	j >>= right_shift_amt;
+	//uint64_t j = Skc_load_le64(INDEX_(GRAPH_, last_word_index));
+	//uint64_t j = SKC_LOAD_LE64(INDEX_(GRAPH_, last_word_index));
+	uint64_t j = Base_load_le64(INDEX_(GRAPH_, last_word_index));
+	//uint64_t j;
+	//{
+	 // uint8_t* le64 = INDEX_(GRAPH_, last_word_index);
+	  //j = SKC_LOAD_LE64(le64);
+	  //j >>= right_shift_amt;
+	//}
 	COPY_(INDEX_(TEMP_, 0), INDEX_(GRAPH_, last_word_index));
 	COPY_(INDEX_(TEMP_, 1), INDEX_(GRAPH_, j));
 	HASH_(ctx, INDEX_(GRAPH_, 0), INDEX_(TEMP_, 0));
 	for (uint64_t i = 1; i <= last_word_index; ++i) {
-		memcpy(&j, INDEX_(GRAPH_, (i - 1)), sizeof(j));
+		j = Base_load_le64(INDEX_(GRAPH_, (i - 1)));
 		j >>= right_shift_amt;
 		COPY_(INDEX_(TEMP_, 0), INDEX_(GRAPH_, (i - 1)));
 		COPY_(INDEX_(TEMP_, 1), INDEX_(GRAPH_, j));
@@ -211,9 +212,9 @@ void gamma (R_(Skc_Catena512*) ctx, const uint8_t garlic) {
 		Skc_UBI512_chain_message(&ctx->ubi512, TEMP_.rng, SKC_THREEFISH512_BLOCK_BYTES);
 		Skc_UBI512_chain_output(&ctx->ubi512, TEMP_.rng, RNG_OUTPUT_SIZE_);
 		uint64_t j1, j2;
-		memcpy(&j1, TEMP_.rng + J1_OFFSET_, sizeof(j1));
+		j1 = Base_load_le64(TEMP_.rng + J1_OFFSET_);
 		j1 >>= right_shift_amt;
-		memcpy(&j2, TEMP_.rng + J2_OFFSET_, sizeof(j2));
+		j2 = Base_load_le64(TEMP_.rng + J2_OFFSET_);
 		j2 >>= right_shift_amt;
 		COPY_(INDEX_(TEMP_.word_buf, 0), INDEX_(GRAPH_, j1));
 		COPY_(INDEX_(TEMP_.word_buf, 1), INDEX_(GRAPH_, j2));

@@ -40,6 +40,7 @@ enum {
 	SKC_COMMON_PAD_MODE_ASIF
 };
 
+BASE_BEGIN_DECLS
 typedef struct {
 	Skc_CSPRNG  csprng;
 	uint8_t     password_buffer [SKC_COMMON_PASSWORD_BUFFER_BYTES];
@@ -53,5 +54,6 @@ typedef struct {
 	uint8_t     lambda;
 	uint8_t     use_phi;
 } Skc_Catena512_Input;
+BASE_END_DECLS
 
 #endif /* ~ SKC_COMMON_H */

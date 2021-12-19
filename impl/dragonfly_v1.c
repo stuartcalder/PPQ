@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include "dragonfly_v1.h"
 #include "csprng.h"
+#include <Base/mem.h>
 
 #ifdef BASE_MLOCK_H
 #	define LOCK_MEMORY_(address, size)	Base_mlock_or_die(address, size)
@@ -100,7 +101,9 @@ void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
 	uint8_t* out = output_mmap->ptr;
 	memcpy(out, SKC_DRAGONFLY_V1_ID, sizeof(SKC_DRAGONFLY_V1_ID));
 	out += sizeof(SKC_DRAGONFLY_V1_ID);
-	memcpy(out, &output_mmap->size, sizeof(output_mmap->size));
+	//Skc_store_le64(out, (uint64_t)output_mmap->size);
+	//SKC_STORE_LE64(out, output_mmap->size);
+	Base_store_le64(out, output_mmap->size);
 	out += sizeof(output_mmap->size);
 	(*out++) = input->g_low;
 	(*out++) = input->g_high;
@@ -114,7 +117,9 @@ void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
 	out += SKC_THREEFISH512_CTR_IV_BYTES;
 	{
 		uint64_t crypt_header [2] = {0};
-		crypt_header[0] = input->padding_bytes;
+		//Skc_store_le64(crypt_header, (uint64_t)input->padding_bytes);
+		//SKC_STORE_LE64(crypt_header, input->padding_bytes);
+		Base_store_le64(crypt_header, input->padding_bytes);
 		Skc_Threefish512_CTR_init(&ctx->secret.threefish512_ctr, ctx->ctr_iv);
 		Skc_Threefish512_CTR_xor_keystream(&ctx->secret.threefish512_ctr,
 		                                   out,
@@ -171,7 +176,9 @@ void Skc_Dragonfly_V1_decrypt (R_(Skc_Dragonfly_V1_Decrypt* const) ctx,
 	uint8_t  use_phi;
 	memcpy(header_id, in, sizeof(header_id));
 	in += sizeof(header_id);
-	memcpy(&header_size, in, sizeof(header_size));
+	//header_size = Skc_load_le64(in);
+	//header_size = SKC_LOAD_LE64(in);
+	header_size = Base_load_le64(in);
 	in += sizeof(header_size);
 	g_low   = (*in++);
 	g_high  = (*in++);
@@ -281,7 +288,8 @@ void Skc_Dragonfly_V1_dump_header (R_(Base_MMap* const) mem_map, R_(const char* 
 #define MIN_SIZE_ (SKC_DRAGONFLY_V1_VISIBLE_METADATA_BYTES + 1)
 	if (mem_map->size < MIN_SIZE_) {
 		CLEANUP_MMAP_(mem_map);
-		Base_errx("Filepath %s looks too small to be SSC_DRAGONFLY_V1 encrypted.\n", filepath);
+		Base_errx("Filepath %s looks too small to be SSC_DRAGONFLY_V1 encrypted.\n"
+		          "Minimum size: %i\n", filepath, MIN_SIZE_);
 	}
 	uint8_t  id [sizeof(SKC_DRAGONFLY_V1_ID)];
 	uint64_t total_size;
@@ -297,7 +305,9 @@ void Skc_Dragonfly_V1_dump_header (R_(Base_MMap* const) mem_map, R_(const char* 
 		const uint8_t* p = mem_map->ptr;
 		memcpy(id, p, sizeof(id));
 		p += sizeof(id);
-		memcpy(&total_size, p, sizeof(total_size));
+		//total_size = Skc_load_le64(p);
+		//total_size = SKC_LOAD_LE64(p);
+		total_size = Base_load_le64(p);
 		p += sizeof(total_size);
 		g_low = (*p++);
 		g_high = (*p++);
@@ -313,22 +323,21 @@ void Skc_Dragonfly_V1_dump_header (R_(Base_MMap* const) mem_map, R_(const char* 
 	}
 	CLEANUP_MMAP_(mem_map);
 	id[sizeof(id) - 1] = 0;
-	fprintf(stdout, "File Header ID : %s\n", (char*)id);
-	fprintf(stdout, "File Size      : %" PRIu64 "\n", total_size);
-	fprintf(stdout, "Garlic Low     : %" PRIu8  "\n", g_low);
-	fprintf(stdout, "Garlic High    : %" PRIu8  "\n", g_high);
-	fprintf(stdout, "Lambda         : %" PRIu8  "\n", lambda);
-	if (!use_phi)
-		fprintf(stdout, "The Phi function is not used.\n");
-	else
-		fprintf(stdout, "WARNING: The Phi function is used. Beware side-channel timing attacks when decrypting this file.\n");
-	fputs("Threefish-512 Tweak:\n", stdout);
+	printf("File Header ID : %s\n", (char*)id);
+	printf("File Size      : %" PRIu64 "\n", total_size);
+	printf("Garlic Low     : 0x%02" PRIx8 "\n", g_low);
+	printf("Garlic High    : 0x%02" PRIx8 "\n", g_high);
+	printf("Lambda         : 0x%02" PRIx8 "\n", lambda);
+	printf("Phi            : 0x%02" PRIx8 "\n", use_phi);
+	if (use_phi)
+		puts("WARNING: The Phi function is used! Beware side-channel timing attacks when decrypting this file!");
+	puts("Threefish-512 Tweak:");
 	Base_print_bytes(tweak, sizeof(tweak));
 	fputs("\nCatena-512 Salt:\n", stdout);
 	Base_print_bytes(salt, sizeof(salt));
 	fputs("\nThreefish-512 Ctr Mode IV:\n", stdout);
 	Base_print_bytes(ctr_iv, sizeof(ctr_iv));
 	fputs("\nSkein-512 Message Authentication Code:\n", stdout);
-	Base_print_bytes(mac, sizeof(mac));
-	fputs("\n", stdout);
+	Base_print_bytes(mac, (sizeof(mac) / 2)); putchar('\n');
+	Base_print_bytes(mac + (sizeof(mac) / 2), (sizeof(mac) / 2)); putchar('\n');
 }

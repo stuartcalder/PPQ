@@ -53,6 +53,9 @@ WORD_ALIGN_ static const uint8_t Skc_Dragonfly_V1_Strong_Metadata  [SKC_THREEFIS
 	0xf3,0x26,0xeb,0x6f,0xa6,0xac,0xb0,0xa6
 };
 
+#define R_(p) p BASE_RESTRICT
+BASE_BEGIN_DECLS
+
 typedef struct {
 	struct {
 		Skc_Catena512_Input	input;
@@ -79,9 +82,6 @@ typedef struct {
 	uint8_t              	password [SKC_COMMON_PASSWORD_BUFFER_BYTES];
 	int                  	password_size;
 } Skc_Dragonfly_V1_Decrypt;
-
-#define R_(p) p BASE_RESTRICT
-BASE_BEGIN_DECLS
 
 SKC_API void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
                                        R_(Base_MMap*  const)               input_mmap,
