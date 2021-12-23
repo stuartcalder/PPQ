@@ -223,12 +223,12 @@ void Skc_Threefish512_CTR_init (R_(Ctr_t* const) ctx, R_(const uint8_t* const) i
 
 void Skc_Threefish512_CTR_xor_keystream (R_(Ctr_t* const) ctx, uint8_t* output, const uint8_t* input, uint64_t input_size, uint64_t start_byte) {
 #define INC_U64_(u64p) Base_store_le64(u64p, Base_load_le64(u64p) + 1)
-	if (!start_byte)
+	if (start_byte == 0)
 		memset(ctx->keystream, 0, sizeof(uint64_t));
 	else {
 		uint64_t starting_block = start_byte / SKC_THREEFISH512_BLOCK_BYTES;
-		int      offset         = start_byte % SKC_THREEFISH512_BLOCK_BYTES;
-		int      bytes          = SKC_THREEFISH512_BLOCK_BYTES - offset;
+		int_fast8_t offset = start_byte % SKC_THREEFISH512_BLOCK_BYTES;
+		int_fast8_t bytes  = SKC_THREEFISH512_BLOCK_BYTES - offset;
 		Base_store_le64(ctx->keystream, starting_block);
 		Skc_Threefish512_Static_encipher(&ctx->threefish512, ctx->buffer, ctx->keystream);
 		INC_U64_(ctx->keystream);
@@ -256,6 +256,7 @@ void Skc_Threefish512_CTR_xor_keystream (R_(Ctr_t* const) ctx, uint8_t* output, 
 	}
 	if (input_size) {
 		Skc_Threefish512_Static_encipher(&ctx->threefish512, ctx->buffer, ctx->keystream);
+		BASE_STATIC_ASSERT(INT_FAST8_MAX > SKC_THREEFISH512_BLOCK_BYTES, "Should be impossible.");
 		for (int_fast8_t i = 0; i < (int_fast8_t)input_size; ++i)
 			ctx->buffer[i] ^= input[i];
 		memcpy(output, ctx->buffer, input_size);
