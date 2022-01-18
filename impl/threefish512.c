@@ -59,7 +59,7 @@ void Skc_Threefish512_Static_encipher (R_(Static_t* const) ctx, uint8_t* const c
   w1 = Base_load_le64(ctx->state + (((idx) * 2) + 1)); \
   w0 += w1; \
   Base_store_le64(ctx->state + ((idx) * 2), w0); \
-  w1 = BASE_ROT_LEFT(w1, rot_const, 64) ^ w0; \
+  w1 = Base_rotl_64(w1, rot_const) ^ w0; \
   Base_store_le64(ctx->state + (((idx) * 2) + 1), w1); \
 } while (0)
 #define SUBKEY_INDEX_(round) ((round) / 4)
