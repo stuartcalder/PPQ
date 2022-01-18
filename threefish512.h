@@ -28,7 +28,7 @@
 #define SKC_THREEFISH512_CTR_IV_BYTES		32
 
 #define R_(p) p BASE_RESTRICT
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 
 /* Threefish-512 with a precomputed key schedule.
  *	Good for instances when you want to encrypt lots of data with one key.*/
@@ -79,7 +79,7 @@ SKC_API void Skc_Threefish512_CTR_xor_keystream (R_(Skc_Threefish512_CTR* const)
 						 const uint8_t*                  input,
 						 uint64_t                        input_size,
 						 uint64_t                        starting_byte);
-BASE_END_DECLS
+BASE_END_C_DECLS
 #undef R_
 
 #endif /* ~ SKC_THREEFISH512_H */

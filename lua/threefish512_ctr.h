@@ -14,8 +14,8 @@ typedef struct {
 	uint64_t		idx;
 } Skc_Lua_Threefish512_CTR;
 
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 SKC_API int luaopen_Skc_Threefish512_CTR (lua_State* L);
-BASE_END_DECLS
+BASE_END_C_DECLS
 
 #endif

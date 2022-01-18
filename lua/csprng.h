@@ -13,8 +13,8 @@
 typedef Skc_CSPRNG Skc_Lua_CSPRNG;
 #define SKC_LUA_CSPRNG_NULL_LITERAL (Skc_Lua_CSPRNG){0}
 
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 SKC_API int luaopen_Skc_CSPRNG (lua_State*);
-BASE_END_DECLS
+BASE_END_C_DECLS
 
 #endif /* ! */

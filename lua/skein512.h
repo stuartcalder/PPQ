@@ -12,8 +12,8 @@
 typedef Skc_UBI512 Skc_Lua_Skein512;
 #define SKC_LUA_SKEIN512_NULL_LITERAL (Skc_Lua_Skein512){0}
 
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 SKC_API int luaopen_Skc_Skein512 (lua_State*);
-BASE_END_DECLS
+BASE_END_C_DECLS
 
 #endif /* ! */

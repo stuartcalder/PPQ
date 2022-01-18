@@ -29,13 +29,13 @@ typedef struct {
 #define SKC_UBI512_NULL_LITERAL (Skc_UBI512){0}
 
 #define R_(ptr) ptr BASE_RESTRICT
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 SKC_API void Skc_UBI512_chain_config (R_(Skc_UBI512* const) ctx, const uint64_t num_out_bits);
 SKC_API void Skc_UBI512_chain_native_output (R_(Skc_UBI512* const) ctx, R_(uint8_t*) output);
 SKC_API void Skc_UBI512_chain_message (R_(Skc_UBI512* const) ctx, R_(const uint8_t*) input, uint64_t num_in_bytes);
 SKC_API void Skc_UBI512_chain_output (R_(Skc_UBI512* const) ctx, R_(uint8_t*) output, uint64_t num_out_byte);
 SKC_API void Skc_UBI512_chain_key (R_(Skc_UBI512* const) ctx, R_(const uint8_t*) input);
-BASE_END_DECLS
+BASE_END_C_DECLS
 #undef R_
 
 #endif // ~ SKC_UBI512_MODE_H

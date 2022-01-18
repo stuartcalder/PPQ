@@ -9,12 +9,12 @@
   BASE_INLINE void Skc_rand_uint##bits (Skc_CSPRNG* csprng, uint##bits##_t* buffer) { \
     Skc_CSPRNG_get(csprng, (uint8_t*)buffer, sizeof(*buffer)); \
   }
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 RAND_(16)
 RAND_(32)
 RAND_(64)
 SKC_API uint64_t Skc_rand_nat_num (Skc_CSPRNG* csprng, uint64_t nat_max);
-BASE_END_DECLS
+BASE_END_C_DECLS
 #undef RAND_
 #undef R_
 

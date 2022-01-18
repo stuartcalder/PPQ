@@ -18,7 +18,7 @@
 #define SKC_CATENA512_DOMAIN_POW		UINT8_C(2)
 #define SKC_CATENA512_MHF_TEMP_BYTES		SKC_GRAPH_HASHING_TEMP_BYTES
 #define R_(p) p BASE_RESTRICT
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 
 enum {
 	SKC_CATENA512_SUCCESS,
@@ -59,6 +59,6 @@ SKC_API int Skc_Catena512_with_phi (R_(Skc_Catena512*) ctx,
 				    const uint8_t      g_low,
 				    const uint8_t      g_high,
 				    const uint8_t      lambda);
-BASE_END_DECLS
+BASE_END_C_DECLS
 #undef R_
 #endif // ~ SKC_CATENA512_H

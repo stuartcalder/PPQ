@@ -3,8 +3,8 @@
 
 #include <Skc/lua/macros.h>
 
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 SKC_API int luaopen_Skc (lua_State* L);
-BASE_END_DECLS
+BASE_END_C_DECLS
 
 #endif

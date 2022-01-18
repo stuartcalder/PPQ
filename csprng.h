@@ -6,7 +6,7 @@
 #include "macros.h"
 #include "ubi512.h"
 #define R_(p) p BASE_RESTRICT
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 
 #define ALIGN_ BASE_ALIGNAS(uint64_t)
 typedef struct {
@@ -27,7 +27,7 @@ BASE_INLINE void Skc_CSPRNG_del (Skc_CSPRNG* ctx) {
 SKC_API void Skc_CSPRNG_reseed    (R_(Skc_CSPRNG*) ctx, R_(const uint8_t*) seed);
 SKC_API void Skc_CSPRNG_os_reseed (Skc_CSPRNG* ctx);
 SKC_API void Skc_CSPRNG_get       (R_(Skc_CSPRNG*) ctx, R_(uint8_t*) output, uint64_t requested_bytes);
-BASE_END_DECLS
+BASE_END_C_DECLS
 #undef R_
 
 #endif /* ! */

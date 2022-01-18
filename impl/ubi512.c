@@ -45,7 +45,7 @@ void Skc_UBI512_chain_config (R_(Skc_UBI512* const) ctx, const uint64_t num_out_
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
 	memcpy(ctx->msg_state, init, sizeof(init));
-	memcpy(ctx->msg_state + 8, &num_out_bits, sizeof(num_out_bits));
+	Base_store_le64(ctx->msg_state + 8, num_out_bits);
 	INIT_ENCIPHER_XOR_(ctx);
 }
 void Skc_UBI512_chain_native_output (R_(Skc_UBI512* const) ctx, R_(uint8_t*) output) {

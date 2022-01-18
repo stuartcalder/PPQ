@@ -54,7 +54,7 @@ WORD_ALIGN_ static const uint8_t Skc_Dragonfly_V1_Strong_Metadata  [SKC_THREEFIS
 };
 
 #define R_(p) p BASE_RESTRICT
-BASE_BEGIN_DECLS
+BASE_BEGIN_C_DECLS
 
 typedef struct {
 	struct {
@@ -93,7 +93,7 @@ SKC_API void Skc_Dragonfly_V1_decrypt (R_(Skc_Dragonfly_V1_Decrypt* const) ctx,
 				       R_(const char* const)               output_filepath);
 SKC_API void Skc_Dragonfly_V1_dump_header (R_(Base_MMap* const) input_mmap, R_(const char* const) filepath);
 
-BASE_END_DECLS
+BASE_END_C_DECLS
 #undef R_
 #undef WORD_ALIGN_
 

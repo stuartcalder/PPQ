@@ -161,15 +161,8 @@ void phi (R_(Skc_Catena512*) ctx, const uint8_t garlic) {
 
 	const uint64_t last_word_index = (UINT64_C(1) << garlic) - 1;
 	const int right_shift_amt = 64 - garlic;
-	//uint64_t j = Skc_load_le64(INDEX_(GRAPH_, last_word_index));
-	//uint64_t j = SKC_LOAD_LE64(INDEX_(GRAPH_, last_word_index));
 	uint64_t j = Base_load_le64(INDEX_(GRAPH_, last_word_index));
-	//uint64_t j;
-	//{
-	 // uint8_t* le64 = INDEX_(GRAPH_, last_word_index);
-	  //j = SKC_LOAD_LE64(le64);
-	  //j >>= right_shift_amt;
-	//}
+	j >>= right_shift_amt;
 	COPY_(INDEX_(TEMP_, 0), INDEX_(GRAPH_, last_word_index));
 	COPY_(INDEX_(TEMP_, 1), INDEX_(GRAPH_, j));
 	HASH_(ctx, INDEX_(GRAPH_, 0), INDEX_(TEMP_, 0));
@@ -290,7 +283,7 @@ int Skc_Catena512_with_phi (R_(Skc_Catena512*) ctx,
 			    const uint8_t      lambda)
 {
 	/* Allocate the graph memory. Free it at the end of the procedure; return on alloc failure. */
-	const uint64_t allocated_bytes = UINT64_C(1) << (g_high + 6);
+	const uint64_t allocated_bytes = UINT64_C(1) << ((int)g_high + 6);
 	ctx->graph_memory = (uint8_t*)malloc(allocated_bytes);
 	if (!ctx->graph_memory)
 		return SKC_CATENA512_ALLOC_FAILURE;
