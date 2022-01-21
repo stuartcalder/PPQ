@@ -15,6 +15,7 @@
 #include "threefish512.h"
 
 #define SKC_DRAGONFLY_V1_ID				"SSC_DRAGONFLY_V1"
+#define SKC_DRAGONFLY_V1_ID_NBYTES			17 /* Including null-terminator. */
 #define SKC_DRAGONFLY_V1_BLOCK_BITS			SKC_THREEFISH512_BLOCK_BITS
 #define SKC_DRAGONFLY_V1_BLOCK_BYTES			SKC_THREEFISH512_BLOCK_BYTES
 #define SKC_DRAGONFLY_V1_SALT_BITS			SKC_CATENA512_SALT_BITS
@@ -90,7 +91,17 @@ typedef struct {
 	int                  	password_size;
 } Skc_Dragonfly_V1_Decrypt;
 #define SKC_DRAGONFLY_V1_DECRYPT_NULL_LITERAL \
- (Skc_Dragonfly_V1_Decrypt){0}
+ (Skc_Dragonfly_V1_Decrypt){ \
+  SKC_THREEFISH512_CTR_NULL_LITERAL, \
+  SKC_UBI512_NULL_LITERAL, \
+  SKC_CATENA512_NULL_LITERAL, \
+  {0}, /*enc_key*/ \
+  {0}, /*auth_key*/ \
+  {0}, /*hash_buf*/ \
+  {0}, /*mac*/ \
+  {0}, /*password*/ \
+  0   /*password_size*/ \
+ }
 
 SKC_API void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
                                        R_(Base_MMap*  const)               input_mmap,

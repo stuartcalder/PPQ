@@ -21,16 +21,16 @@
 BASE_BEGIN_C_DECLS
 
 enum {
-	SKC_CATENA512_SUCCESS,
-	SKC_CATENA512_ALLOC_FAILURE
+  SKC_CATENA512_SUCCESS,
+  SKC_CATENA512_ALLOC_FAILURE
 };
 
-#define ALIGN_ BASE_ALIGNAS(uint64_t)
+#define AL_ BASE_ALIGNAS(uint64_t)
 typedef struct {
 	Skc_UBI512	ubi512;
 	uint8_t*	graph_memory;
-	ALIGN_ uint8_t	x    [SKC_THREEFISH512_BLOCK_BYTES];
-	ALIGN_ uint8_t	salt [SKC_CATENA512_SALT_BYTES];
+	AL_ uint8_t	x    [SKC_THREEFISH512_BLOCK_BYTES];
+	AL_ uint8_t	salt [SKC_CATENA512_SALT_BYTES];
 	union {
 		uint8_t tw_pw_salt [SKC_CATENA512_TWEAK_BYTES + SKC_CATENA512_MAX_PASSWORD_BYTES + SKC_CATENA512_SALT_BYTES];
 		uint8_t flap	   [SKC_THREEFISH512_BLOCK_BYTES * 3];
@@ -43,7 +43,7 @@ typedef struct {
 		} gamma;
 	} temp;
 } Skc_Catena512;
-#undef ALIGN_
+#define SKC_CATENA512_NULL_LITERAL (Skc_Catena512){0}
 
 SKC_API int Skc_Catena512_without_phi (R_(Skc_Catena512*) ctx,
                                        R_(uint8_t*)       output,
@@ -61,4 +61,5 @@ SKC_API int Skc_Catena512_with_phi (R_(Skc_Catena512*) ctx,
 				    const uint8_t      lambda);
 BASE_END_C_DECLS
 #undef R_
+#undef AL_
 #endif // ~ SKC_CATENA512_H
