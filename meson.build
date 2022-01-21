@@ -50,6 +50,8 @@ gcc_compatible_flags = [
   '-fstrict-aliasing',
   '-Wall',
   '-funroll-loops'
+  #'-D_BSD_SOURCE',
+  #'-D_DEFAULT_SOURCE'
   ]
 if os != 'netbsd'
   gcc_compatible_flags += '-flto'

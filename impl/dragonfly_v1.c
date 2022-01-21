@@ -17,8 +17,8 @@
 	Base_close_file_or_die(mmap_ptr->file)
 
 #define CLEANUP_ERROR_(secret) \
-	Base_secure_zero(&secret, sizeof(secret)); \
-	UNLOCK_MEMORY_(&secret, sizeof(secret)); \
+	Base_secure_zero(&(secret), sizeof(secret)); \
+	UNLOCK_MEMORY_(&(secret), sizeof(secret)); \
 	CLEANUP_MMAP_(output_mmap); \
 	CLEANUP_MMAP_(input_mmap); \
 	remove(output_filepath)
