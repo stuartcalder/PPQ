@@ -21,7 +21,12 @@ typedef Skc_Threefish512_Static  Static_t;
 typedef Skc_Threefish512_Dynamic Dynamic_t;
 typedef Skc_Threefish512_CTR     Ctr_t;
 
-void Skc_Threefish512_Static_init (R_(Static_t* const) ctx, R_(uint64_t* const) key, R_(uint64_t* const) twk) {
+void
+Skc_Threefish512_Static_init
+(R_(Static_t* const) ctx,
+ R_(uint64_t* const) key,
+ R_(uint64_t* const) twk)
+{
 #define LOAD_WORD_(key, subkey, i) \
   Base_load_le64(key + (((subkey) + i) % SKC_THREEFISH512_EXTERNAL_KEY_WORDS))
 #define STORE_WORD_(subkey, i, add) \
@@ -52,7 +57,14 @@ void Skc_Threefish512_Static_init (R_(Static_t* const) ctx, R_(uint64_t* const) 
 	MAKE_SUBKEY_(18);
 }
 
-void Skc_Threefish512_Static_encipher (R_(Static_t* const) ctx, uint8_t* const ctext, const uint8_t* const ptext) {
+void
+Skc_Threefish512_Static_encipher
+(R_(Static_t* const)  ctx,
+ void* const       v_ctext,
+ const void* const v_ptext)
+{
+  uint8_t* const       ctext = (uint8_t*)      v_ctext;
+  const uint8_t* const ptext = (const uint8_t*)v_ptext;
 #define DO_MIX_(idx, rot_const) do { \
   uint64_t w0, w1; \
   w0 = Base_load_le64(ctx->state + ((idx) * 2)); \
@@ -62,8 +74,10 @@ void Skc_Threefish512_Static_encipher (R_(Static_t* const) ctx, uint8_t* const c
   w1 = Base_rotl_64(w1, rot_const) ^ w0; \
   Base_store_le64(ctx->state + (((idx) * 2) + 1), w1); \
 } while (0)
+/* Rounds 0-3 use subkey idx 0, 4-7 use subkey idx 1, etc. */
 #define SUBKEY_INDEX_(round) ((round) / 4)
 #define SKI_(rnd) SUBKEY_INDEX_(rnd)
+/* What is the offset of this round's subkey? */
 #define SUBKEY_OFFSET_(round) (SKI_(round) * SKC_THREEFISH512_BLOCK_WORDS)
 #define SKO_(rnd) SUBKEY_OFFSET_(rnd)
 #define USE_SUBKEY_(op, rnd) do { \
@@ -153,13 +167,25 @@ void Skc_Threefish512_Static_encipher (R_(Static_t* const) ctx, uint8_t* const c
 	memcpy(ctext, ctx->state, sizeof(ctx->state));
 }
 
-void Skc_Threefish512_Dynamic_init (R_(Dynamic_t* const) ctx, R_(uint64_t* const) key, R_(uint64_t* const) twk) {
+void
+Skc_Threefish512_Dynamic_init
+(R_(Dynamic_t* const) ctx,
+ R_(uint64_t* const)  key,
+ R_(uint64_t* const)  twk)
+{
 	INIT_KEYSCHEDULE_(key, twk);
-	ctx->extern_key = key;
+	ctx->extern_key   = key;
 	ctx->extern_tweak = twk;
 }
 
-void Skc_Threefish512_Dynamic_encipher (R_(Dynamic_t* const) ctx, uint8_t* const ctext, const uint8_t* const ptext) {
+void
+Skc_Threefish512_Dynamic_encipher
+(R_(Dynamic_t* const) ctx,
+ void* const          v_ctext,
+ const void* const    v_ptext)
+{
+  uint8_t* const       ctext = (uint8_t*)      v_ctext;
+  const uint8_t* const ptext = (const uint8_t*)v_ptext;
 #undef USE_SUBKEY_
 #define USE_SUBKEY_(op, rnd) do { \
   uint64_t st, ek, et; \
@@ -214,15 +240,35 @@ void Skc_Threefish512_Dynamic_encipher (R_(Dynamic_t* const) ctx, uint8_t* const
 	memcpy(ctext, ctx->state, sizeof(ctx->state));
 }
 
-void Skc_Threefish512_CTR_init (R_(Ctr_t* const) ctx, R_(const uint8_t* const) init_vec) {
-	uint8_t* p = ctx->keystream + 8;
-	memset(p, 0, (SKC_THREEFISH512_CTR_IV_BYTES - 8));
-	p = ctx->keystream + SKC_THREEFISH512_CTR_IV_BYTES;
-	memcpy(p, init_vec, SKC_THREEFISH512_CTR_IV_BYTES);
+void
+Skc_Threefish512_CTR_init
+(R_(Ctr_t* const)      ctx,
+ R_(const void* const) init_vec)
+{ 
+  uint8_t* p = ctx->keystream + 8;
+  /* Zero byte indices 8 through 23 inclusive. */
+  memset(p, 0, (SKC_THREEFISH512_CTR_IV_BYTES - 8));
+  /* Copy 32 pseudorandom @init_vec bytes into the last
+   * 32 bytes of the keystream. */
+  p = ctx->keystream + SKC_THREEFISH512_CTR_IV_BYTES;
+  memcpy(p, init_vec, SKC_THREEFISH512_CTR_IV_BYTES);
+  /* The first 8 bytes of the keystream are the counter.
+   * At this point the counter is uninitialized, and will
+   * be initialized during $Skc_Threefish512_CTR_xor_keystream.
+   */
 }
 
-void Skc_Threefish512_CTR_xor_keystream (R_(Ctr_t* const) ctx, uint8_t* output, const uint8_t* input, uint64_t input_size, uint64_t start_byte) {
-#define INC_U64_(u64p) Base_store_le64(u64p, Base_load_le64(u64p) + 1)
+void
+Skc_Threefish512_CTR_xor_keystream
+(R_(Ctr_t* const) ctx,
+ void*            v_output,
+ const void*      v_input,
+ uint64_t         input_size,
+ uint64_t         start_byte)
+{
+	uint8_t*       output = (uint8_t*)      v_output;
+	const uint8_t* input  = (const uint8_t*)v_input;
+#define INC_U64_(u64p) Base_store_le64(u64p, Base_load_le64(u64p) + UINT64_C(1))
 	if (start_byte == 0)
 		memset(ctx->keystream, 0, sizeof(uint64_t));
 	else {

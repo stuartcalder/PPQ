@@ -17,19 +17,18 @@
 #define SKC_UBI512_TYPEMASK_MSG		UINT8_C(48)
 #define SKC_UBI512_TYPEMASK_OUT		UINT8_C(63)
 
-#define WORD_ALIGN_ BASE_ALIGNAS(uint64_t)
+#define R_(ptr) ptr BASE_RESTRICT
+#define AL_     BASE_ALIGNAS(uint64_t)
+BASE_BEGIN_C_DECLS
 typedef struct {
 	Skc_Threefish512_Dynamic threefish512;
 	uint64_t                 key_state   [SKC_THREEFISH512_EXTERNAL_KEY_WORDS];
-	WORD_ALIGN_ uint8_t	 msg_state   [SKC_THREEFISH512_BLOCK_BYTES];
+	AL_ uint8_t	         msg_state   [SKC_THREEFISH512_BLOCK_BYTES];
 	uint64_t                 tweak_state [SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS];
 } Skc_UBI512;
-#undef WORD_ALIGN_
 
 #define SKC_UBI512_NULL_LITERAL (Skc_UBI512){0}
 
-#define R_(ptr) ptr BASE_RESTRICT
-BASE_BEGIN_C_DECLS
 SKC_API void Skc_UBI512_chain_config (R_(Skc_UBI512* const) ctx, const uint64_t num_out_bits);
 SKC_API void Skc_UBI512_chain_native_output (R_(Skc_UBI512* const) ctx, R_(uint8_t*) output);
 SKC_API void Skc_UBI512_chain_message (R_(Skc_UBI512* const) ctx, R_(const uint8_t*) input, uint64_t num_in_bytes);
@@ -37,5 +36,6 @@ SKC_API void Skc_UBI512_chain_output (R_(Skc_UBI512* const) ctx, R_(uint8_t*) ou
 SKC_API void Skc_UBI512_chain_key (R_(Skc_UBI512* const) ctx, R_(const uint8_t*) input);
 BASE_END_C_DECLS
 #undef R_
+#undef AL_
 
 #endif // ~ SKC_UBI512_MODE_H

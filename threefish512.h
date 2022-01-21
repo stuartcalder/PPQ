@@ -31,12 +31,13 @@
 BASE_BEGIN_C_DECLS
 
 /* Threefish-512 with a precomputed key schedule.
- *	Good for instances when you want to encrypt lots of data with one key.*/
+ *   Good for instances when you want to encrypt lots of data with one key
+ *   Initialize with Skc_Threefish512_Static_init. Provide a key and tweak.
+ */
 typedef struct {
 	uint64_t key_schedule   [SKC_THREEFISH512_KEY_WORDS * SKC_THREEFISH512_NUMBER_SUBKEYS];
 	uint64_t state		[SKC_THREEFISH512_BLOCK_WORDS];
 } Skc_Threefish512_Static;
-
 #define SKC_THREEFISH512_STATIC_NULL_LITERAL (Skc_Threefish512_Static){0}
 
 /* Threefish-512 with a dynamically computed key schedule.
@@ -46,39 +47,105 @@ typedef struct {
 	uint64_t* extern_key;
 	uint64_t* extern_tweak;
 } Skc_Threefish512_Dynamic;
-
 #define SKC_THREEFISH512_DYNAMIC_NULL_LITERAL (Skc_Threefish512_Dynamic){0}
 
-#define ALIGN_ BASE_ALIGNAS(uint64_t)
+#define AL_ BASE_ALIGNAS(uint64_t)
 typedef struct {
-	Skc_Threefish512_Static  threefish512;
-	ALIGN_ uint8_t	         keystream [SKC_THREEFISH512_BLOCK_BYTES];
-	ALIGN_ uint8_t	         buffer    [SKC_THREEFISH512_BLOCK_BYTES];
+	Skc_Threefish512_Static threefish512;
+	AL_ uint8_t             keystream [SKC_THREEFISH512_BLOCK_BYTES];
+	AL_ uint8_t	        buffer    [SKC_THREEFISH512_BLOCK_BYTES];
 } Skc_Threefish512_CTR;
-#undef ALIGN_
+#undef AL_
 
-#define SKC_THREEFISH512_CTR_NULL_LITERAL (Skc_Threefish512_CTR){0}
+#define SKC_THREEFISH512_CTR_NULL_LITERAL \
+ (Skc_Threefish512_CTR){SKC_THREEFISH512_STATIC_NULL_LITERAL, {0}, {0}}
 
 /* Base Threefish procedures. */
-SKC_API void Skc_Threefish512_Static_init (R_(Skc_Threefish512_Static* const) ctx,
-                                           R_(uint64_t* const)                key,
-					   R_(uint64_t* const)                tweak);
-SKC_API void Skc_Threefish512_Static_encipher (R_(Skc_Threefish512_Static* const) ctx,
-                                               uint8_t* const                     ciphertext,
-					       const uint8_t* const               plaintext);
-SKC_API void Skc_Threefish512_Dynamic_init  (R_(Skc_Threefish512_Dynamic* const) ctx,
-                                             R_(uint64_t* const)                 key,
-					     R_(uint64_t* const)                 tweak);
-SKC_API void Skc_Threefish512_Dynamic_encipher (R_(Skc_Threefish512_Dynamic* const) ctx,
-                                                uint8_t* const                      ciphertext,
-						const uint8_t* const                plaintext);
+
+/* Skc_Threefish512_Static_init(context, key_words, tweak_words)
+ * Initialize Threefish512 data with a once-computed keyschedule.
+ *   @context:     Address of Skc_Threefish512_Static struct.
+ *   @key_words:   Address of 64-bit little-endian key words.   (SKC_THREEFISH512_EXTERNAL_KEY_WORDS   64-bit words).
+ *   @tweak_words: Address of 64-bit little-endian tweak words. (SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS 64-bit words).
+ * No return; cannot fail.
+ */
+SKC_API void
+Skc_Threefish512_Static_init
+(R_(Skc_Threefish512_Static* const) context,
+ R_(uint64_t* const)                key_words,
+ R_(uint64_t* const)                tweak_words);
+
+/* Skc_Threefish512_Static_encipher(context, ciphertext, plaintext)
+ * Encipher one block, 64 bytes, and store it.
+ *   @context:    Address of Skc_Threefish512_Static struct.
+ *   @ciphertext: Address to store the encrypted block at.
+ *   @plaintext:  Address to read the plaintext block from.
+ * No return; cannot fail.
+ */
+SKC_API void
+Skc_Threefish512_Static_encipher
+(R_(Skc_Threefish512_Static* const) context,
+ void* const                        ciphertext,
+ const void* const                  plaintext);
+
+/* Skc_Threefish512_Dynamic_init(context, key_words, tweak_words)
+ * Initialize Threefish512 data with a dynamically computed keyschedule.
+ * (More efficient when re-keying is common, as in Skein.)
+ *   @context:     Address of Skc_Threefish512_Static struct.
+ *   @key_words:   Address of 64-bit little-endian key words.   (SKC_THREEFISH512_EXTERNAL_KEY_WORDS   64-bit words).
+ *   @tweak_words: Address of 64-bit little-endian tweak words. (SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS 64-bit words).
+ * No return; cannot fail.
+ */
+SKC_API void
+Skc_Threefish512_Dynamic_init
+(R_(Skc_Threefish512_Dynamic* const) ctx,
+ R_(uint64_t* const)                 key_words,
+ R_(uint64_t* const)                 tweak_words);
+
+/* Skc_Threefish512_Dynamic_encipher(context, ciphertext, plaintext)
+ * Encipher one block, 64 bytes, and store it.
+ *   @context:    Address of Skc_Threefish512_Dynamic struct.
+ *   @ciphertext: Address to store the encrypted block at.
+ *   @plaintext:  Address to read the plaintext block from.
+ * No return; cannot fail.
+ */
+SKC_API void
+Skc_Threefish512_Dynamic_encipher
+(R_(Skc_Threefish512_Dynamic* const) ctx,
+ void* const                         ciphertext,
+ const void* const                   plaintext);
+
 /* Counter mode procedures. */
-SKC_API void Skc_Threefish512_CTR_init (R_(Skc_Threefish512_CTR* const) ctx, R_(const uint8_t* const) init_vec);
-SKC_API void Skc_Threefish512_CTR_xor_keystream (R_(Skc_Threefish512_CTR* const) ctx,
-                                                 uint8_t*                        output,
-						 const uint8_t*                  input,
-						 uint64_t                        input_size,
-						 uint64_t                        starting_byte);
+
+/* Skc_Threefish512_CTR_init(context, initialization_vector)
+ *   @context:               Address of Skc_Threefish512_CTR struct.
+ *   @initialization_vector: Address of 32 pseudorandom bytes to use as CTR IV for Threefish512-CTR.
+ *
+ * Before calling this, initialize Skc_Threefish512_CTR.threefish512 with $Skc_Threefish512_Static.
+ *
+ * No return; cannot fail.
+ */
+SKC_API void
+Skc_Threefish512_CTR_init
+(R_(Skc_Threefish512_CTR* const) ctx,
+ R_(const void* const) init_vec);
+
+/* Skc_Threefish512_CTR_xor_keystream(context, output, input, input_size, starting_byte)
+ *   @context:       Address of Skc_Threefish512_CTR struct.
+ *   @output:        Address to being writing output to. Write @input_size here.
+ *   @input:         Address to begin reading input from. Read @input_size from here.
+ *   @input_size:    Number of bytes to XOR.
+ *   @starting_byte: Initial CTR mode counter value. i.e. 0 means start from the beginning
+ *                   of the keystream.
+ */
+SKC_API void
+Skc_Threefish512_CTR_xor_keystream
+(R_(Skc_Threefish512_CTR* const) ctx,
+ void*                           output,
+ const void*                     input,
+ uint64_t                        input_size,
+ uint64_t                        starting_byte);
+
 BASE_END_C_DECLS
 #undef R_
 
