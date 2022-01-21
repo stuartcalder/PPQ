@@ -3,16 +3,24 @@
 
 #define R_(ptr) ptr BASE_RESTRICT
 
-void Skc_CSPRNG_reseed (R_(Skc_CSPRNG*) ctx, R_(const uint8_t*) seed) {
-	uint8_t* const word_0 = ctx->buffer;
-	uint8_t* const word_1 = word_0 + SKC_THREEFISH512_BLOCK_BYTES;
-	memcpy(word_0, ctx->seed, SKC_THREEFISH512_BLOCK_BYTES);
-	memcpy(word_1, seed     , SKC_THREEFISH512_BLOCK_BYTES);
-	Skc_Skein512_hash_native(&ctx->ubi512, ctx->seed, ctx->buffer, sizeof(ctx->buffer));
-	Base_secure_zero(ctx->buffer, sizeof(ctx->buffer));
+void
+Skc_CSPRNG_reseed
+(R_(Skc_CSPRNG*) ctx,
+ R_(const void*) v_entropy)
+{
+  const uint8_t* entropy = (const uint8_t*)v_entropy;
+  uint8_t* const word_0 = ctx->buffer;
+  uint8_t* const word_1 = word_0 + SKC_THREEFISH512_BLOCK_BYTES;
+  memcpy(word_0, ctx->seed, SKC_THREEFISH512_BLOCK_BYTES);
+  memcpy(word_1, entropy  , SKC_THREEFISH512_BLOCK_BYTES);
+  Skc_Skein512_hash_native(&ctx->ubi512, ctx->seed, ctx->buffer, sizeof(ctx->buffer));
+  Base_secure_zero(ctx->buffer, sizeof(ctx->buffer));
 }
 
-void Skc_CSPRNG_os_reseed (Skc_CSPRNG* ctx) {
+void
+Skc_CSPRNG_os_reseed
+(Skc_CSPRNG* ctx)
+{
 	uint8_t* const word_0 = ctx->buffer;
 	uint8_t* const word_1 = word_0 + SKC_THREEFISH512_BLOCK_BYTES;
 	memcpy(word_0, ctx->seed, SKC_THREEFISH512_BLOCK_BYTES);
@@ -37,20 +45,26 @@ static const uint8_t SKEIN_PRECOMPUTED_CFG_ [SKC_THREEFISH512_BLOCK_BYTES] = {
 	Skc_UBI512_chain_message(ctx_p, input, input_size); \
 	Skc_UBI512_chain_output(ctx_p, output, output_size)
 
-void Skc_CSPRNG_get (R_(Skc_CSPRNG*) ctx, R_(uint8_t*) output, uint64_t num_bytes) {
-	if (!num_bytes) return;
-	Skc_UBI512* const ubi512_p = &ctx->ubi512;
-	uint8_t*    const word_0 = ctx->buffer;
-	uint8_t*    const word_1 = word_0 + SKC_THREEFISH512_BLOCK_BYTES;
-	while (num_bytes > SKC_THREEFISH512_BLOCK_BYTES) {
-		SKEIN_PRE_CFG_(ubi512_p, ctx->buffer, ctx->seed, sizeof(ctx->seed), sizeof(ctx->buffer));
-		memcpy(ctx->seed, word_0, SKC_THREEFISH512_BLOCK_BYTES);
-		memcpy(output   , word_1, SKC_THREEFISH512_BLOCK_BYTES);
-		output    += SKC_THREEFISH512_BLOCK_BYTES;
-		num_bytes -= SKC_THREEFISH512_BLOCK_BYTES;
-	}
-	SKEIN_PRE_CFG_(ubi512_p, ctx->buffer, ctx->seed, sizeof(ctx->seed), sizeof(ctx->buffer));
-	memcpy(ctx->seed, word_0, SKC_THREEFISH512_BLOCK_BYTES);
-	memcpy(output   , word_1, num_bytes);
-	Base_secure_zero(ctx->buffer, sizeof(ctx->buffer));
+void
+Skc_CSPRNG_get
+(R_(Skc_CSPRNG*) ctx,
+ R_(void*)       v_output,
+ uint64_t        num_bytes)
+{
+  uint8_t* output = (uint8_t*)v_output;
+  if (!num_bytes) return;
+  Skc_UBI512* const ubi512_p = &ctx->ubi512;
+  uint8_t*    const word_0 = ctx->buffer;
+  uint8_t*    const word_1 = word_0 + SKC_THREEFISH512_BLOCK_BYTES;
+  while (num_bytes > SKC_THREEFISH512_BLOCK_BYTES) {
+    SKEIN_PRE_CFG_(ubi512_p, ctx->buffer, ctx->seed, sizeof(ctx->seed), sizeof(ctx->buffer));
+    memcpy(ctx->seed, word_0, SKC_THREEFISH512_BLOCK_BYTES);
+    memcpy(output   , word_1, SKC_THREEFISH512_BLOCK_BYTES);
+    output    += SKC_THREEFISH512_BLOCK_BYTES;
+    num_bytes -= SKC_THREEFISH512_BLOCK_BYTES;
+  }
+  SKEIN_PRE_CFG_(ubi512_p, ctx->buffer, ctx->seed, sizeof(ctx->seed), sizeof(ctx->buffer));
+  memcpy(ctx->seed, word_0, SKC_THREEFISH512_BLOCK_BYTES);
+  memcpy(output   , word_1, num_bytes);
+  Base_secure_zero(ctx->buffer, sizeof(ctx->buffer));
 }
