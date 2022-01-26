@@ -21,8 +21,8 @@
 BASE_BEGIN_C_DECLS
 
 enum {
-  SKC_CATENA512_SUCCESS,
-  SKC_CATENA512_ALLOC_FAILURE
+  SKC_CATENA512_SUCCESS = 0,
+  SKC_CATENA512_ALLOC_FAILURE = 1
 };
 
 #define AL_ BASE_ALIGNAS(uint64_t)
@@ -44,6 +44,11 @@ typedef struct {
 	} temp;
 } Skc_Catena512;
 #define SKC_CATENA512_NULL_LITERAL (Skc_Catena512){0}
+
+BASE_INLINE void
+Skc_Catena512_init
+(Skc_Catena512* ctx)
+{ Skc_UBI512_init(&ctx->ubi512); }
 
 SKC_API int Skc_Catena512_without_phi (R_(Skc_Catena512*) ctx,
                                        R_(uint8_t*)       output,

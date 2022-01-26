@@ -3,28 +3,19 @@
 
 #define R_(ptr) ptr BASE_RESTRICT
 #define INIT_ENCIPHER_XOR_(ctx) \
-	Skc_Threefish512_Dynamic_init(&ctx->threefish512, ctx->key_state, ctx->tweak_state); \
-	Skc_Threefish512_Dynamic_encipher(&ctx->threefish512, (uint8_t*)ctx->key_state, ctx->msg_state); \
-	Base_xor_64(ctx->key_state, ctx->msg_state)
+ Skc_UBI512_init_tf_ks(ctx); \
+ Skc_Threefish512_Dynamic_encipher(&ctx->threefish512, ctx->key_state, ctx->msg_state); \
+ Base_xor_64(ctx->key_state, ctx->msg_state)
 
 #define MODIFY_TWEAK_FLAGS_(ctx, op, val) \
-	((uint8_t*)ctx->tweak_state)[SKC_THREEFISH512_TWEAK_BYTES - 1] op val
+ ((uint8_t*)ctx->tweak_state)[SKC_THREEFISH512_TWEAK_BYTES - 1] op val
 
-#define SET_TWEAK_POSITION_(ctx, val) Base_store_le64(ctx->tweak_state, val)
+#define SET_TWEAK_POSITION_(ctx, val) \
+ Base_store_le64(ctx->tweak_state, val)
 
 #define MODIFY_TWEAK_POSITION_(ctx, op, val) \
   Base_store_le64(ctx->tweak_state, \
                   Base_load_le64(ctx->tweak_state) op val)
-
-#if 0
-#define MODIFY_TWEAK_POSITION_(ctx, op, val) \
-	ctx->tweak_state[0] op val
-#define MODIFY_TWEAK_POSITION_(ctx, op, val) do { \
-  uint64_t w = Skc_load_le64(ctx->tweak_state); \
-  w op val; \
-  Skc_store_le64(ctx->tweak_state, w); \
-} while (0)
-#endif
 
 #define INIT_TWEAK_(ctx, init_bitwise_or) \
 	memset(ctx->tweak_state, 0, SKC_THREEFISH512_TWEAK_BYTES); \

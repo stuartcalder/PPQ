@@ -62,6 +62,14 @@ typedef struct {
 
 /* Base Threefish procedures. */
 
+/* Skc_Threefish512_calc_ks_parity_words()
+ * TODO
+ */
+SKC_API void
+Skc_Threefish512_calc_ks_parity_words
+(R_(uint64_t* const) key,
+ R_(uint64_t* const) twk);
+
 /* Skc_Threefish512_Static_init(context, key_words, tweak_words)
  * Initialize Threefish512 data with a once-computed keyschedule.
  *   @context:     Address of Skc_Threefish512_Static struct.
@@ -88,6 +96,7 @@ Skc_Threefish512_Static_encipher
  void* const                        ciphertext,
  const void* const                  plaintext);
 
+#if 0
 /* Skc_Threefish512_Dynamic_init(context, key_words, tweak_words)
  * Initialize Threefish512 data with a dynamically computed keyschedule.
  * (More efficient when re-keying is common, as in Skein.)
@@ -101,6 +110,21 @@ Skc_Threefish512_Dynamic_init
 (R_(Skc_Threefish512_Dynamic* const) ctx,
  R_(uint64_t* const)                 key_words,
  R_(uint64_t* const)                 tweak_words);
+ #endif
+
+/* Skc_Threefish512_Dynamic_init()
+ * TODO
+ */
+BASE_INLINE void
+Skc_Threefish512_Dynamic_init
+(R_(Skc_Threefish512_Dynamic* const) ctx,
+ R_(uint64_t* const)                 key,
+ R_(uint64_t* const)                 twk)
+{
+  Skc_Threefish512_calc_ks_parity_words(key, twk);
+  ctx->extern_key   = key;
+  ctx->extern_tweak = twk;
+}
 
 /* Skc_Threefish512_Dynamic_encipher(context, ciphertext, plaintext)
  * Encipher one block, 64 bytes, and store it.
@@ -121,7 +145,7 @@ Skc_Threefish512_Dynamic_encipher
  *   @context:               Address of Skc_Threefish512_CTR struct.
  *   @initialization_vector: Address of 32 pseudorandom bytes to use as CTR IV for Threefish512-CTR.
  *
- * Before calling this, initialize Skc_Threefish512_CTR.threefish512 with $Skc_Threefish512_Static.
+ * Before calling this, initialize Skc_Threefish512_CTR.threefish512 with $Skc_Threefish512_Static_init.
  *
  * No return; cannot fail.
  */

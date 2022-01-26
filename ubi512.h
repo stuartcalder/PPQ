@@ -1,6 +1,7 @@
 #ifndef SKC_UBI512_H
 #define SKC_UBI512_H
 
+#include <stddef.h>
 #include <Base/macros.h>
 #include "macros.h"
 #include "threefish512.h"
@@ -8,14 +9,14 @@
 #define SKC_UBI512_TWEAK_FIRST_BIT	UINT8_C(0x40)
 #define SKC_UBI512_TWEAK_FIRST_MASK	UINT8_C(0xbf)
 #define SKC_UBI512_TWEAK_LAST_BIT	UINT8_C(0x80)
-#define SKC_UBI512_TYPEMASK_KEY		UINT8_C(0)
-#define SKC_UBI512_TYPEMASK_CFG		UINT8_C(4)
-#define SKC_UBI512_TYPEMASK_PRS		UINT8_C(8)
-#define SKC_UBI512_TYPEMASK_PK		UINT8_C(12)
-#define SKC_UBI512_TYPEMASK_KDF		UINT8_C(16)
-#define SKC_UBI512_TYPEMASK_NON		UINT8_C(20)
-#define SKC_UBI512_TYPEMASK_MSG		UINT8_C(48)
-#define SKC_UBI512_TYPEMASK_OUT		UINT8_C(63)
+#define SKC_UBI512_TYPEMASK_KEY		UINT8_C(0)  /* Key. */
+#define SKC_UBI512_TYPEMASK_CFG		UINT8_C(4)  /* Configuration. */
+#define SKC_UBI512_TYPEMASK_PRS		UINT8_C(8)  /* Personalization. */
+#define SKC_UBI512_TYPEMASK_PK		UINT8_C(12) /* Public-Key. */
+#define SKC_UBI512_TYPEMASK_KDF		UINT8_C(16) /* Key-Derivation-Function. */
+#define SKC_UBI512_TYPEMASK_NON		UINT8_C(20) /* Nonce. */
+#define SKC_UBI512_TYPEMASK_MSG		UINT8_C(48) /* Message. */
+#define SKC_UBI512_TYPEMASK_OUT		UINT8_C(63) /* Output. */
 
 #define R_(ptr) ptr BASE_RESTRICT
 #define AL_     BASE_ALIGNAS(uint64_t)
@@ -27,6 +28,30 @@ typedef struct {
 	uint64_t                 tweak_state [SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS];
 } Skc_UBI512;
 #define SKC_UBI512_NULL_LITERAL (Skc_UBI512){0}
+
+BASE_INLINE void
+Skc_UBI512_init_tf_ks
+(Skc_UBI512* const ctx)
+{ Skc_Threefish512_calc_ks_parity_words(ctx->key_state, ctx->tweak_state); }
+
+BASE_INLINE void
+Skc_UBI512_init_tf_ptrs
+(Skc_UBI512* const ctx)
+{
+  ctx->threefish512.extern_key   = ctx->key_state;
+  ctx->threefish512.extern_tweak = ctx->tweak_state;
+}
+
+/* Base_UBI512_init()
+ * TODO
+ */
+BASE_INLINE void
+Skc_UBI512_init
+(Skc_UBI512* const ctx)
+{
+  Skc_UBI512_init_tf_ks(ctx);
+  Skc_UBI512_init_tf_ptrs(ctx);
+}
 
 /* Skc_UBI512_chain_config(context, num_output_bits)
  *   @context:         Address of Skc_UBI512 struct.

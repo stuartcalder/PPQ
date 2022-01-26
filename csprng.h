@@ -25,7 +25,10 @@ typedef struct {
 BASE_INLINE void
 Skc_CSPRNG_init
 (Skc_CSPRNG* context)
-{ Base_get_os_entropy(context->seed, sizeof(context->seed)); }
+{
+  Skc_UBI512_init(&context->ubi512);
+  Base_get_os_entropy(context->seed, sizeof(context->seed));
+}
 
 /* Skc_CSPRNG_del(context)
  * Securely zero over the RNG data.

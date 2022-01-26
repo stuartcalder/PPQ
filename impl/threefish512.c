@@ -3,20 +3,6 @@
 #include <stdint.h>
 
 #define R_(ptr) ptr BASE_RESTRICT
-#define INIT_KEYSCHEDULE_(key, twk) do { \
-  Base_store_le64(key + SKC_THREEFISH512_KEY_WORDS, \
-                  SKC_THREEFISH512_CONSTANT_240 ^ \
-		  Base_load_le64(key + 0) ^ \
-		  Base_load_le64(key + 1) ^ \
-		  Base_load_le64(key + 2) ^ \
-		  Base_load_le64(key + 3) ^ \
-		  Base_load_le64(key + 4) ^ \
-		  Base_load_le64(key + 5) ^ \
-		  Base_load_le64(key + 6) ^ \
-		  Base_load_le64(key + 7)); \
-  Base_store_le64(twk + 2, (Base_load_le64(twk + 0) ^ Base_load_le64(twk + 1))); \
-} while (0)
-
 typedef Skc_Threefish512_Static  Static_t;
 typedef Skc_Threefish512_Dynamic Dynamic_t;
 typedef Skc_Threefish512_CTR     Ctr_t;
@@ -30,8 +16,10 @@ Skc_Threefish512_Static_init
 #define LOAD_WORD_(key, subkey, i) \
   Base_load_le64(key + (((subkey) + i) % SKC_THREEFISH512_EXTERNAL_KEY_WORDS))
 #define STORE_WORD_(subkey, i, add) \
-  Base_store_le64(ctx->key_schedule + (((subkey) * SKC_THREEFISH512_BLOCK_WORDS) + i), \
-                  LOAD_WORD_(key, (subkey), i) + add)
+  Base_store_le64( \
+   ctx->key_schedule + (((subkey) * SKC_THREEFISH512_BLOCK_WORDS) + i), \
+   LOAD_WORD_(key, (subkey), i) + add \
+  )
 #define MAKE_SUBKEY_(subkey) \
   STORE_WORD_(subkey, 0, UINT64_C(0)); \
   STORE_WORD_(subkey, 1, UINT64_C(0)); \
@@ -47,7 +35,7 @@ Skc_Threefish512_Static_init
 		MAKE_SUBKEY_(start_skey + 2); \
 		MAKE_SUBKEY_(start_skey + 3); \
 	} while (0)
-	INIT_KEYSCHEDULE_(key, twk);
+	Skc_Threefish512_calc_ks_parity_words(key, twk);
 	MAKE_4_SUBKEYS_(0);
 	MAKE_4_SUBKEYS_(4);
 	MAKE_4_SUBKEYS_(8);
@@ -165,17 +153,6 @@ Skc_Threefish512_Static_encipher
 	ENC_ROUND_PHASE_1_(68);
 	ADD_SUBKEY_(72);
 	memcpy(ctext, ctx->state, sizeof(ctx->state));
-}
-
-void
-Skc_Threefish512_Dynamic_init
-(R_(Dynamic_t* const) ctx,
- R_(uint64_t* const)  key,
- R_(uint64_t* const)  twk)
-{
-	INIT_KEYSCHEDULE_(key, twk);
-	ctx->extern_key   = key;
-	ctx->extern_tweak = twk;
 }
 
 void
@@ -307,4 +284,27 @@ Skc_Threefish512_CTR_xor_keystream
 			ctx->buffer[i] ^= input[i];
 		memcpy(output, ctx->buffer, input_size);
 	}
+}
+
+void
+Skc_Threefish512_calc_ks_parity_words
+(R_(uint64_t* const) key,
+ R_(uint64_t* const) twk)
+{
+  Base_store_le64(
+   key + 8,
+   SKC_THREEFISH512_CONSTANT_240 ^
+   Base_load_le64(key + 0) ^
+   Base_load_le64(key + 1) ^
+   Base_load_le64(key + 2) ^
+   Base_load_le64(key + 3) ^
+   Base_load_le64(key + 4) ^
+   Base_load_le64(key + 5) ^
+   Base_load_le64(key + 6) ^
+   Base_load_le64(key + 7)
+  );
+  Base_store_le64(
+   twk + 2,
+   Base_load_le64(twk + 0) ^ Base_load_le64(twk + 1)
+  );
 }

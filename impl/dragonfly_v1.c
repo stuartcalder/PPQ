@@ -3,6 +3,7 @@
 #include "dragonfly_v1.h"
 #include "csprng.h"
 #include <Base/mem.h>
+#include <Base/mmap.h>
 
 #ifdef BASE_MLOCK_H
 #	define LOCK_MEMORY_(address, size)	Base_mlock_or_die(address, size)
@@ -14,7 +15,7 @@
 
 #define CLEANUP_MMAP_(mmap_ptr) \
 	Base_MMap_unmap_or_die(mmap_ptr); \
-	Base_close_file_or_die(mmap_ptr->file)
+	Base_close_file_or_die(mmap_ptr->file);
 
 #define CLEANUP_ERROR_(secret) \
 	Base_secure_zero(&(secret), sizeof(secret)); \
@@ -31,6 +32,33 @@
 	CLEANUP_MMAP_(input_mmap)
 
 #define R_(p) p BASE_RESTRICT
+#define AL_   BASE_ALIGNAS(8)
+
+AL_ static const uint8_t Skc_Dragonfly_V1_NoPhi_Cfg  [SKC_THREEFISH512_BLOCK_BYTES] = {
+	0x79,0xb5,0x79,0x1e,0x9a,0xac,0x02,0x64,
+	0x2a,0xaa,0x99,0x1b,0xd5,0x47,0xed,0x14,
+	0x74,0x4d,0x72,0xbf,0x13,0x22,0x54,0xc9,
+	0xad,0xd6,0xb9,0xbe,0xe8,0x70,0x18,0xe2,
+	0xaa,0x51,0x50,0xe2,0x1f,0xcd,0x90,0x19,
+	0xb6,0x1f,0x0e,0xc6,0x05,0x00,0xd6,0xed,
+	0x7c,0xf2,0x03,0x53,0xfd,0x42,0xa5,0xa3,
+	0x7a,0x0e,0xbb,0xb4,0xa7,0xeb,0xdb,0xab
+};
+AL_ static const uint8_t Skc_Dragonfly_V1_Phi_Cfg  [SKC_THREEFISH512_BLOCK_BYTES] = {
+	0x1f,0x23,0x89,0x58,0x4a,0x4a,0xbb,0xa5,
+	0x9f,0x09,0xca,0xd4,0xef,0xac,0x43,0x1d,
+	0xde,0x9a,0xb0,0xf8,0x69,0xaa,0x50,0xf3,
+	0xed,0xcc,0xb4,0x7d,0x6d,0x4f,0x10,0xb9,
+	0x8e,0x6a,0x68,0xab,0x6e,0x53,0xbc,0xd6,
+	0xcf,0xfc,0xa7,0x63,0x94,0x44,0xbd,0xc7,
+	0xb9,0x6d,0x09,0xf5,0x66,0x31,0xa3,0xc5,
+	0xf3,0x26,0xeb,0x6f,0xa6,0xac,0xb0,0xa6
+};
+
+const uint8_t* const Skc_Dragonfly_V1_NoPhi_Cfg_g = Skc_Dragonfly_V1_NoPhi_Cfg;
+const uint8_t* const Skc_Dragonfly_V1_Phi_Cfg_g   = Skc_Dragonfly_V1_Phi_Cfg;
+
+
 void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
                                R_(Base_MMap*  const)               input_mmap,
 			       R_(Base_MMap*  const)               output_mmap,
@@ -54,26 +82,32 @@ void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
 		Skc_CSPRNG_del(csprng);
 	}
 	{
-		memcpy(ctx->secret.catena512.salt,
-		       ctx->catena512_salt,
-		       sizeof(ctx->catena512_salt));
+                memcpy(
+                 ctx->secret.catena512.salt,
+                 ctx->catena512_salt,
+                 sizeof(ctx->catena512_salt)
+                );
 		int status;
 		if (!input->use_phi) {
-			status = Skc_Catena512_without_phi(&ctx->secret.catena512,
-			                                   ctx->secret.hash_out,
-							   input->password_buffer,
-							   input->password_size,
-							   input->g_low,
-							   input->g_high,
-							   input->lambda);
+                        status = Skc_Catena512_without_phi(
+                         &ctx->secret.catena512,
+                         ctx->secret.hash_out,
+                         input->password_buffer,
+                         input->password_size,
+                         input->g_low,
+                         input->g_high,
+                         input->lambda
+                        );
 		} else {
-			status = Skc_Catena512_with_phi(&ctx->secret.catena512,
-			                                ctx->secret.hash_out,
-							input->password_buffer,
-							input->password_size,
-							input->g_low,
-							input->g_high,
-							input->lambda);
+                        status = Skc_Catena512_with_phi(
+                         &ctx->secret.catena512,
+                         ctx->secret.hash_out,
+                         input->password_buffer,
+                         input->password_size,
+                         input->g_low,
+                         input->g_high,
+                         input->lambda
+                        );
 		}
 		if (status) {
 			CLEANUP_ERROR_(ctx->secret);
@@ -84,25 +118,27 @@ void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
 		/* Catena512 will output 512 bits. We will hash these 512 bits into 1024 output bits using Skein
 		 * with the first 512 bits as the encryption key, and the second 512 bits as the authentication key.
 		 */
-		Skc_Skein512_hash(&ctx->secret.ubi512,
-		                  ctx->secret.hash_out,
-				  ctx->secret.hash_out,
-				  SKC_THREEFISH512_BLOCK_BYTES,
-				  (SKC_THREEFISH512_BLOCK_BYTES * 2));
+                Skc_Skein512_hash(
+                 &ctx->secret.ubi512,
+                 ctx->secret.hash_out, /*output*/
+                 ctx->secret.hash_out, /*input*/
+                 SKC_THREEFISH512_BLOCK_BYTES, /*input size*/
+                 (SKC_THREEFISH512_BLOCK_BYTES * 2) /*output size*/
+                );
 		BASE_STATIC_ASSERT(sizeof(ctx->secret.hash_out) == (SKC_THREEFISH512_BLOCK_BYTES * 2), "Size reminder.");
 		memcpy(ctx->secret.enc_key , enc_key , SKC_THREEFISH512_BLOCK_BYTES);
 		memcpy(ctx->secret.auth_key, auth_key, SKC_THREEFISH512_BLOCK_BYTES);
 		/* Scrub the hash buffer and initialize the Threefish cipher. */
 		Base_secure_zero(ctx->secret.hash_out, sizeof(ctx->secret.hash_out));
-		Skc_Threefish512_Static_init(&ctx->secret.threefish512_ctr.threefish512,
-		                             ctx->secret.enc_key,
-					     ctx->tf_tweak);
+                Skc_Threefish512_Static_init(
+                 &ctx->secret.threefish512_ctr.threefish512,
+                 ctx->secret.enc_key,
+                 ctx->tf_tweak
+                );
 	}
 	uint8_t* out = output_mmap->ptr;
 	memcpy(out, SKC_DRAGONFLY_V1_ID, sizeof(SKC_DRAGONFLY_V1_ID));
 	out += sizeof(SKC_DRAGONFLY_V1_ID);
-	//Skc_store_le64(out, (uint64_t)output_mmap->size);
-	//SKC_STORE_LE64(out, output_mmap->size);
 	Base_store_le64(out, output_mmap->size);
 	out += sizeof(output_mmap->size);
 	(*out++) = input->g_low;
@@ -117,39 +153,43 @@ void Skc_Dragonfly_V1_encrypt (R_(Skc_Dragonfly_V1_Encrypt* const) ctx,
 	out += SKC_THREEFISH512_CTR_IV_BYTES;
 	{
 		uint64_t crypt_header [2] = {0};
-		//Skc_store_le64(crypt_header, (uint64_t)input->padding_bytes);
-		//SKC_STORE_LE64(crypt_header, input->padding_bytes);
 		Base_store_le64(crypt_header, input->padding_bytes);
 		Skc_Threefish512_CTR_init(&ctx->secret.threefish512_ctr, ctx->ctr_iv);
-		Skc_Threefish512_CTR_xor_keystream(&ctx->secret.threefish512_ctr,
-		                                   out,
-						   (uint8_t*)crypt_header,
-						   sizeof(crypt_header),
-						   0);
+                Skc_Threefish512_CTR_xor_keystream(
+                 &ctx->secret.threefish512_ctr,
+                 out,
+                 (uint8_t*)crypt_header,
+                 sizeof(crypt_header),
+                 0
+                );
 		out += sizeof(crypt_header);
 		if (input->padding_bytes) {
-			Skc_Threefish512_CTR_xor_keystream(&ctx->secret.threefish512_ctr,
-			                                   out,
-							   out,
-							   input->padding_bytes,
-							   sizeof(crypt_header));
+                        Skc_Threefish512_CTR_xor_keystream(
+                         &ctx->secret.threefish512_ctr,
+                         out,
+                         out,
+                         input->padding_bytes,
+                         sizeof(crypt_header)
+                        );
 			out += input->padding_bytes;
 		}
-		Skc_Threefish512_CTR_xor_keystream(&ctx->secret.threefish512_ctr,
-		                                   out,
-						   input_mmap->ptr,
-						   input_mmap->size,
-						   sizeof(crypt_header) + input->padding_bytes);
+                Skc_Threefish512_CTR_xor_keystream(
+                 &ctx->secret.threefish512_ctr,
+                 out,
+                 input_mmap->ptr,
+                 input_mmap->size,
+                 sizeof(crypt_header) + input->padding_bytes
+                );
 		out += input_mmap->size;
 	}
-	{
-		Skc_Skein512_mac(&ctx->secret.ubi512,
-		                 out,
-				 output_mmap->ptr,
-				 ctx->secret.auth_key,
-				 output_mmap->size - SKC_COMMON_MAC_BYTES,
-				 SKC_COMMON_MAC_BYTES);
-	}
+        Skc_Skein512_mac(
+         &ctx->secret.ubi512,
+         out,
+         output_mmap->ptr,
+         ctx->secret.auth_key,
+         output_mmap->size - SKC_COMMON_MAC_BYTES,
+         SKC_COMMON_MAC_BYTES
+        );
 	CLEANUP_SUCCESS_(ctx->secret);
 }
 void Skc_Dragonfly_V1_decrypt (R_(Skc_Dragonfly_V1_Decrypt* const) ctx,
@@ -176,8 +216,6 @@ void Skc_Dragonfly_V1_decrypt (R_(Skc_Dragonfly_V1_Decrypt* const) ctx,
 	uint8_t  use_phi;
 	memcpy(header_id, in, sizeof(header_id));
 	in += sizeof(header_id);
-	//header_size = Skc_load_le64(in);
-	//header_size = SKC_LOAD_LE64(in);
 	header_size = Base_load_le64(in);
 	in += sizeof(header_size);
 	g_low   = (*in++);
@@ -202,13 +240,15 @@ void Skc_Dragonfly_V1_decrypt (R_(Skc_Dragonfly_V1_Decrypt* const) ctx,
 	memcpy(ctx->catena512.salt, catena512_salt, sizeof(catena512_salt));
 	if (!use_phi) {
 		BASE_STATIC_ASSERT(sizeof(catena512_salt) == sizeof(ctx->catena512.salt), "These must be the same size.");
-		int ret = Skc_Catena512_without_phi(&ctx->catena512,
-		                                    ctx->hash_buf,
-						    ctx->password,
-						    ctx->password_size,
-						    g_low,
-						    g_high,
-						    lambda);
+                int ret = Skc_Catena512_without_phi(
+                 &ctx->catena512,
+                 ctx->hash_buf,
+                 ctx->password,
+                 ctx->password_size,
+                 g_low,
+                 g_high,
+                 lambda
+                );
 		if (ret != SKC_CATENA512_SUCCESS) {
 			Base_secure_zero(ctx, sizeof(*ctx));
 			UNLOCK_MEMORY_(ctx, sizeof(*ctx));
@@ -219,13 +259,15 @@ void Skc_Dragonfly_V1_decrypt (R_(Skc_Dragonfly_V1_Decrypt* const) ctx,
 		}
 		Base_secure_zero(&ctx->catena512, sizeof(ctx->catena512));
 	} else {
-		int ret = Skc_Catena512_with_phi(&ctx->catena512,
-		                                 ctx->hash_buf,
-						 ctx->password,
-						 ctx->password_size,
-						 g_low,
-						 g_high,
-						 lambda);
+                int ret = Skc_Catena512_with_phi(
+                 &ctx->catena512,
+                 ctx->hash_buf,
+                 ctx->password,
+                 ctx->password_size,
+                 g_low,
+                 g_high,
+                 lambda
+                );
 		if (ret != SKC_CATENA512_SUCCESS) {
 			Base_secure_zero(ctx, sizeof(*ctx));
 			UNLOCK_MEMORY_(ctx, sizeof(*ctx));
@@ -237,45 +279,69 @@ void Skc_Dragonfly_V1_decrypt (R_(Skc_Dragonfly_V1_Decrypt* const) ctx,
 		Base_secure_zero(&ctx->catena512, sizeof(ctx->catena512));
 	}
 	{ /*Generate the keys.*/
-		Skc_Skein512_hash(&ctx->ubi512,
-		                  ctx->hash_buf,
-				  ctx->hash_buf,
-				  SKC_THREEFISH512_BLOCK_BYTES,
-				  (SKC_THREEFISH512_BLOCK_BYTES * 2));
+                Skc_Skein512_hash(
+                 &ctx->ubi512,
+                 ctx->hash_buf,
+                 ctx->hash_buf,
+                 SKC_THREEFISH512_BLOCK_BYTES,
+                 (SKC_THREEFISH512_BLOCK_BYTES * 2)
+                );
 		uint8_t* const enc_key = ctx->hash_buf;
 		uint8_t* const auth_key = enc_key + SKC_THREEFISH512_BLOCK_BYTES;
 		memcpy(ctx->enc_key , enc_key , SKC_THREEFISH512_BLOCK_BYTES);
 		memcpy(ctx->auth_key, auth_key, SKC_THREEFISH512_BLOCK_BYTES);
 		Base_secure_zero(ctx->hash_buf, sizeof(ctx->hash_buf));
 		{
-			Skc_Skein512_mac(&ctx->ubi512,
-			                 ctx->mac,
-					 input_mmap->ptr,
-					 ctx->auth_key,
-					 input_mmap->size - SKC_COMMON_MAC_BYTES,
-					 sizeof(ctx->mac));
-			if (Base_ctime_memdiff(ctx->mac, (input_mmap->ptr + input_mmap->size - SKC_COMMON_MAC_BYTES), SKC_COMMON_MAC_BYTES)) {
-				Base_secure_zero(ctx, sizeof(*ctx));
-				UNLOCK_MEMORY_(ctx, sizeof(*ctx));
-				CLEANUP_MMAP_(input_mmap);
-				Base_close_file_or_die(output_mmap->file);
-				remove(output_filepath);
-				Base_errx("Error: Authentication failed.\nPossibilities: Wrong password, the file is corrupted, or it has been tampered with!\n");
-			}
+                        Skc_Skein512_mac(
+                         &ctx->ubi512,
+                         ctx->mac,
+                         input_mmap->ptr,
+                         ctx->auth_key,
+                         input_mmap->size - SKC_COMMON_MAC_BYTES,
+                         SKC_COMMON_MAC_BYTES
+                        );
+                        if (
+                          0 != Base_ctime_memdiff(
+                           ctx->mac,
+                           input_mmap->ptr + input_mmap->size - SKC_COMMON_MAC_BYTES,
+                           SKC_COMMON_MAC_BYTES
+                          )
+                        )
+                          {
+                            Base_secure_zero(ctx, sizeof(*ctx));
+                            UNLOCK_MEMORY_(ctx, sizeof(*ctx));
+                            CLEANUP_MMAP_(input_mmap);
+                            Base_close_file_or_die(output_mmap->file);
+                            remove(output_filepath);
+                            Base_errx(
+                             "Error: Authentication failed.\n"
+                             "Possibilities: Wrong password, the file is corrupted, or it has been tampered with!\n"
+                            );
+                          }
 		}
 		Skc_Threefish512_Static_init(&ctx->threefish512_ctr.threefish512, ctx->enc_key, tweak);
 		{
 			Skc_Threefish512_CTR_init(&ctx->threefish512_ctr, ctr_iv);
 			uint64_t padding_bytes;
-			Skc_Threefish512_CTR_xor_keystream(&ctx->threefish512_ctr, (uint8_t*)&padding_bytes,
-			                                   in, sizeof(padding_bytes), 0);
+                        Skc_Threefish512_CTR_xor_keystream(
+                         &ctx->threefish512_ctr,
+                         (uint8_t*)&padding_bytes,
+                         in,
+                         sizeof(padding_bytes),
+                         0
+                        );
 			const uint64_t step = padding_bytes + (sizeof(uint64_t) * 2);
 			output_mmap->size -= padding_bytes;
 			Base_set_file_size_or_die(output_mmap->file, output_mmap->size);
-			Base_MMap_map(output_mmap, false);
+			Base_MMap_map_or_die(output_mmap, false);
 			in += step;
-			Skc_Threefish512_CTR_xor_keystream(&ctx->threefish512_ctr, output_mmap->ptr,
-			                                   in, output_mmap->size, step);
+                        Skc_Threefish512_CTR_xor_keystream(
+                         &ctx->threefish512_ctr,
+                         output_mmap->ptr,
+                         in,
+                         output_mmap->size,
+                         step
+                        );
 		}
 		Base_secure_zero(ctx, sizeof(*ctx));
 		UNLOCK_MEMORY_(ctx, sizeof(*ctx));
@@ -288,8 +354,12 @@ void Skc_Dragonfly_V1_dump_header (R_(Base_MMap* const) mem_map, R_(const char* 
 #define MIN_SIZE_ (SKC_DRAGONFLY_V1_VISIBLE_METADATA_BYTES + 1)
 	if (mem_map->size < MIN_SIZE_) {
 		CLEANUP_MMAP_(mem_map);
-		Base_errx("Filepath %s looks too small to be SSC_DRAGONFLY_V1 encrypted.\n"
-		          "Minimum size: %i\n", filepath, MIN_SIZE_);
+		Base_errx(
+                 "Filepath %s looks too small to be SSC_DRAGONFLY_V1 encrypted.\n"
+		 "Minimum size: %i\n",
+                 filepath,
+                 MIN_SIZE_
+                );
 	}
 	uint8_t  id [sizeof(SKC_DRAGONFLY_V1_ID)];
 	uint64_t total_size;
@@ -305,8 +375,6 @@ void Skc_Dragonfly_V1_dump_header (R_(Base_MMap* const) mem_map, R_(const char* 
 		const uint8_t* p = mem_map->ptr;
 		memcpy(id, p, sizeof(id));
 		p += sizeof(id);
-		//total_size = Skc_load_le64(p);
-		//total_size = SKC_LOAD_LE64(p);
 		total_size = Base_load_le64(p);
 		p += sizeof(total_size);
 		g_low = (*p++);
@@ -322,7 +390,7 @@ void Skc_Dragonfly_V1_dump_header (R_(Base_MMap* const) mem_map, R_(const char* 
 		memcpy(mac, p, sizeof(mac));
 	}
 	CLEANUP_MMAP_(mem_map);
-	id[sizeof(id) - 1] = 0;
+	id[sizeof(id) - 1] = 0; /* Manually null-terminating it. */
 	printf("File Header ID : %s\n", (char*)id);
 	printf("File Size      : %" PRIu64 "\n", total_size);
 	printf("Garlic Low     : 0x%02" PRIx8 "\n", g_low);
