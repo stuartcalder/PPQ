@@ -115,6 +115,15 @@ elif os == 'windows'
   include_install = 'C:/include'
 endif
 
+if get_option('endian') != 'auto'
+  if get_option('endian') == 'little'
+    lang_flags += _D + 'BASE_EXTERN_ENDIAN=BASE_ENDIAN_LITTLE'
+  endif
+  if get_option('endian') == 'big'
+    lang_flags += _D + 'BASE_EXTERN_ENDIAN=BASE_ENDIAN_BIG'
+  endif
+endif
+
 if os in ['openbsd', 'freebsd', 'darwin']
   lib_deps += compiler.find_library('Base', static: Base_static, dirs: '/usr/local/lib')
 elif os in ['netbsd', 'linux']
