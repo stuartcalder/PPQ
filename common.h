@@ -58,7 +58,7 @@ typedef struct {
 	uint8_t        lambda;
 	uint8_t        use_phi;
 } Skc_Catena512_Input;
-#define SKC_CATENA512_INPUT_NULL_LITERAL (Skc_Catena512_Input){0}
+#define SKC_CATENA512_INPUT_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_Catena512_Input, 0)
 
 typedef struct {
   Skc_CSPRNG     rng;
@@ -66,7 +66,7 @@ typedef struct {
   Skc_Pad_Mode_t pad_mode;
   bool           supplement_entropy;
 } Skc_Keyfile_Input;
-#define SKC_KEYFILE_INPUT_NULL_LITERAL (Skc_Keyfile_Input){0}
+#define SKC_KEYFILE_INPUT_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_Keyfile_Input, 0)
 
 BASE_END_C_DECLS
 

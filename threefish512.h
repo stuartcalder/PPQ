@@ -38,7 +38,7 @@ typedef struct {
 	uint64_t key_schedule   [SKC_THREEFISH512_KEY_WORDS * SKC_THREEFISH512_NUMBER_SUBKEYS];
 	uint64_t state		[SKC_THREEFISH512_BLOCK_WORDS];
 } Skc_Threefish512_Static;
-#define SKC_THREEFISH512_STATIC_NULL_LITERAL (Skc_Threefish512_Static){0}
+#define SKC_THREEFISH512_STATIC_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_Threefish512_Static, 0)
 
 /* Threefish-512 with a dynamically computed key schedule.
  * 	Used within Skein512 for efficiency, since the key schedule changes every round. */
@@ -47,7 +47,7 @@ typedef struct {
 	uint64_t* extern_key;
 	uint64_t* extern_tweak;
 } Skc_Threefish512_Dynamic;
-#define SKC_THREEFISH512_DYNAMIC_NULL_LITERAL (Skc_Threefish512_Dynamic){0}
+#define SKC_THREEFISH512_DYNAMIC_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_Threefish512_Dynamic, 0)
 
 #define AL_ BASE_ALIGNAS(uint64_t)
 typedef struct {
@@ -57,8 +57,7 @@ typedef struct {
 } Skc_Threefish512_CTR;
 #undef AL_
 
-#define SKC_THREEFISH512_CTR_NULL_LITERAL \
- (Skc_Threefish512_CTR){SKC_THREEFISH512_STATIC_NULL_LITERAL, {0}, {0}}
+#define SKC_THREEFISH512_CTR_NULL_LITERAL BASE_COMPOUND_LITERAL(SKC_THREEFISH512_STATIC_NULL_LITERAL, {0}, {0})
 
 /* Base Threefish procedures. */
 
@@ -95,22 +94,6 @@ Skc_Threefish512_Static_encipher
 (R_(Skc_Threefish512_Static* const) context,
  void* const                        ciphertext,
  const void* const                  plaintext);
-
-#if 0
-/* Skc_Threefish512_Dynamic_init(context, key_words, tweak_words)
- * Initialize Threefish512 data with a dynamically computed keyschedule.
- * (More efficient when re-keying is common, as in Skein.)
- *   @context:     Address of Skc_Threefish512_Static struct.
- *   @key_words:   Address of 64-bit little-endian key words.   (SKC_THREEFISH512_EXTERNAL_KEY_WORDS   64-bit words).
- *   @tweak_words: Address of 64-bit little-endian tweak words. (SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS 64-bit words).
- * No return; cannot fail.
- */
-SKC_API void
-Skc_Threefish512_Dynamic_init
-(R_(Skc_Threefish512_Dynamic* const) ctx,
- R_(uint64_t* const)                 key_words,
- R_(uint64_t* const)                 tweak_words);
- #endif
 
 /* Skc_Threefish512_Dynamic_init()
  * TODO

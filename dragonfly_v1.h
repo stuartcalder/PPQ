@@ -92,7 +92,7 @@ typedef struct {
   AL_ uint8_t catena512_salt [SKC_THREEFISH512_BLOCK_BYTES * 2];
 } Skc_Dragonfly_V1_Encrypt;
 #undef Secret_t
-#define SKC_DRAGONFLY_V1_ENCRYPT_NULL_LITERAL (Skc_Dragonfly_V1_Encrypt){0}
+#define SKC_DRAGONFLY_V1_ENCRYPT_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_Dragonfly_V1_Encrypt, 0)
 BASE_INLINE void
 Skc_Dragonfly_V1_Encrypt_init
 (Skc_Dragonfly_V1_Encrypt* ctx)
@@ -109,7 +109,7 @@ typedef struct {
 	uint8_t              	password [SKC_COMMON_PASSWORD_BUFFER_BYTES];
 	int                  	password_size;
 } Skc_Dragonfly_V1_Decrypt;
-#define SKC_DRAGONFLY_V1_DECRYPT_NULL_LITERAL (Skc_Dragonfly_V1_Decrypt){0}
+#define SKC_DRAGONFLY_V1_DECRYPT_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_Dragonfly_V1_Decrypt, 0)
 BASE_INLINE void
 Skc_Dragonfly_V1_Decrypt_init
 (Skc_Dragonfly_V1_Decrypt* ctx)
@@ -121,7 +121,7 @@ Skc_Dragonfly_V1_Decrypt_init
 #define R_Encrypt_t R_(Skc_Dragonfly_V1_Encrypt* const)
 #define R_Decrypt_t R_(Skc_Dragonfly_V1_Decrypt* const)
 #define R_Map_t     R_(Base_MMap* const)
-#define R_Str_t   R_(const char* const)
+#define R_Str_t     R_(const char* const)
 SKC_API void
 Skc_Dragonfly_V1_encrypt
 (R_Encrypt_t ctx,

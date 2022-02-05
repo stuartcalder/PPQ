@@ -43,7 +43,7 @@ typedef struct {
 		} gamma;
 	} temp;
 } Skc_Catena512;
-#define SKC_CATENA512_NULL_LITERAL (Skc_Catena512){0}
+#define SKC_CATENA512_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_Catena512, 0)
 
 BASE_INLINE void
 Skc_Catena512_init

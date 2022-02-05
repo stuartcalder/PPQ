@@ -14,8 +14,7 @@ typedef struct {
 	AL_ uint8_t buffer [SKC_THREEFISH512_BLOCK_BYTES * 2];
 	AL_ uint8_t seed   [SKC_THREEFISH512_BLOCK_BYTES];
 } Skc_CSPRNG;
-#define SKC_CSPRNG_NULL_LITERAL \
- (Skc_CSPRNG){SKC_UBI512_NULL_LITERAL, {0}, {0}}
+#define SKC_CSPRNG_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_CSPRNG, SKC_UBI512_NULL_LITERAL, {0}, {0})
 
 /* Skc_CSPRNG_init(context)
  * Obtain entropy from the OS, and use it as a seed for the RNG.

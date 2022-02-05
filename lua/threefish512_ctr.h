@@ -13,6 +13,10 @@ typedef struct {
 	Skc_Threefish512_CTR	ctr;
 	uint64_t		idx;
 } Skc_Lua_Threefish512_CTR;
+#define SKC_LUA_THREEFISH512_CTR_NULL_LITERAL \
+ BASE_COMPOUND_LITERAL(Skc_Lua_Threefish512_CTR, \
+                       SKC_THREEFISH512_CTR_NULL_LITERAL, \
+		       UINT64_C(0))
 
 BASE_BEGIN_C_DECLS
 SKC_API int luaopen_Skc_Threefish512_CTR (lua_State* L);

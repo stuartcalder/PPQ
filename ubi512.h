@@ -27,8 +27,7 @@ typedef struct {
 	AL_ uint8_t	         msg_state   [SKC_THREEFISH512_BLOCK_BYTES];
 	uint64_t                 tweak_state [SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS];
 } Skc_UBI512;
-#define SKC_UBI512_NULL_LITERAL (Skc_UBI512){0}
-
+#define SKC_UBI512_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_UBI512, 0)
 BASE_INLINE void
 Skc_UBI512_init_tf_ks
 (Skc_UBI512* const ctx)
