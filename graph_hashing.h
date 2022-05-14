@@ -1,3 +1,6 @@
+/* Copyright (c) 2020-2022 Stuart Steven Calder
+ * See accompanying LICENSE file for licensing information.
+ */
 #ifndef SKC_GRAPH_HASHING_H
 #define SKC_GRAPH_HASHING_H
 

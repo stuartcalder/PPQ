@@ -1,3 +1,6 @@
+/* Copyright (c) 2020-2022 Stuart Steven Calder
+ * See accompanying LICENSE file for licensing information.
+ */
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include "dragonfly_v1.h"

@@ -1,3 +1,6 @@
+/* Copyright (c) 2020-2022 Stuart Steven Calder
+ * See accompanying LICENSE file for licensing information.
+ */
 #include <inttypes.h>
 #include <stdio.h>
 #include "catena512.h"

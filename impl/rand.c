@@ -1,3 +1,6 @@
+/* Copyright (c) 2020-2022 Stuart Steven Calder
+ * See accompanying LICENSE file for licensing information.
+ */
 #include "rand.h"
 
 uint64_t Skc_rand_nat_num (Skc_CSPRNG* csprng, uint64_t nat_max) {
