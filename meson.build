@@ -6,6 +6,12 @@ _SUPPORTED_OPERATING_SYSTEMS = _UNIXLIKE_OPERATING_SYSTEMS + ['windows']
 _GCC_COMPATIBLE_COMPILERS    = ['gcc', 'clang']
 _SUPPORTED_COMPILERS         = _GCC_COMPATIBLE_COMPILERS + ['msvc']
 
+_LIB_DIRS = {
+  'bsd': ['/usr/lib', '/usr/local/lib'],
+  'linux': ['/usr/lib64', '/usr/lib'],
+  'windows': 'C:\lib'
+}
+
 compiler = meson.get_compiler(_LANG)
 os = host_machine.system()
 static = get_option('static') # Are we building a static lib?
@@ -16,9 +22,9 @@ assert (os in _SUPPORTED_OPERATING_SYSTEMS, 'You are trying to build Skc using a
 assert (compiler.get_id() in _SUPPORTED_COMPILERS, 'You are trying to build Skc using an unsupported compiler!')
 
 if os == 'windows' and compiler.get_id() == 'msvc'
-	_D = '/D'
+  _D = '/D'
 else
-	_D = '-D'
+  _D = '-D'
 endif
 
 src = [
@@ -50,8 +56,6 @@ gcc_compatible_flags = [
   '-fstrict-aliasing',
   '-Wall',
   '-funroll-loops'
-  #'-D_BSD_SOURCE',
-  #'-D_DEFAULT_SOURCE'
   ]
 if os != 'netbsd'
   gcc_compatible_flags += '-flto'
@@ -69,12 +73,6 @@ if os in _UNIXLIKE_OPERATING_SYSTEMS
     lang_flags += gcc_compatible_flags
   endif
 endif
-
-_LIB_DIRS = {
-  'bsd': ['/usr/lib', '/usr/local/lib'],
-  'linux': ['/usr/lib', '/usr/lib64'],
-  'windows': 'C:\lib'
-}
 
 if os in ['openbsd', 'freebsd', 'netbsd', 'darwin']
   lib_dir = _LIB_DIRS.get('bsd')
@@ -124,13 +122,7 @@ if get_option('endian') != 'auto'
   endif
 endif
 
-if os in ['openbsd', 'freebsd', 'darwin']
-  lib_deps += compiler.find_library('Base', static: Base_static, dirs: '/usr/local/lib')
-elif os in ['netbsd', 'linux']
-  lib_deps += compiler.find_library('Base', static: Base_static)
-elif os == 'windows'
-  lib_deps += compiler.find_library('Base', static: Base_static, dirs: 'C:\lib')
-endif
+lib_deps += compiler.find_library('Base', static: Base_static, dirs: lib_dir)
 
 inc_dir += '..'
 

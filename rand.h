@@ -8,9 +8,10 @@
 #include "macros.h"
 
 #define R_(ptr) ptr BASE_RESTRICT
-#define RAND_(bits) \
-  BASE_INLINE void Skc_rand_uint##bits (Skc_CSPRNG* csprng, uint##bits##_t* buffer) { \
-    Skc_CSPRNG_get(csprng, (uint8_t*)buffer, sizeof(*buffer)); \
+#define RAND_(Bits) \
+  BASE_INLINE void Skc_rand_uint##Bits(Skc_CSPRNG* csprng, uint##Bits##_t* buffer)\
+  {\
+    Skc_CSPRNG_get(csprng, buffer, sizeof(*buffer));\
   }
 BASE_BEGIN_C_DECLS
 RAND_(16)
