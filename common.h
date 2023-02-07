@@ -1,6 +1,5 @@
-/* Copyright (c) 2020-2022 Stuart Steven Calder
- * See accompanying LICENSE file for licensing information.
- */
+/* Copyright (c) 2020-2023 Stuart Steven Calder
+ * See accompanying LICENSE file for licensing information. */
 #ifndef SKC_COMMON_H
 #define SKC_COMMON_H
 
@@ -21,11 +20,11 @@
 #include "ubi512.h"
 
 #if   defined(BASE_OS_UNIXLIKE)
-# define SKC_COMMON_NEWLINE "\n"
+ #define SKC_COMMON_NEWLINE "\n"
 #elif defined(BASE_OS_WINDOWS)
-# define SKC_COMMON_NEWLINE "\n\r"
+ #define SKC_COMMON_NEWLINE "\n\r"
 #else
-# error "Unsupported OS."
+ #error "Unsupported OS."
 #endif
 
 #define SKC_COMMON_PROMPT			SKC_COMMON_NEWLINE "> "
@@ -40,7 +39,7 @@
 #define SKC_PAD_MODE_NONE   0
 #define SKC_PAD_MODE_ADD    1 /* Add x many bytes to the ciphertext. */
 #define SKC_PAD_MODE_TARGET 2 /* Add as many bytes as necessary to produce a ciphertext of x bytes. */
-#define SKC_PAD_MODE_ASIF   3 /* Add as many bytes as necessary to emulate an unpadded plaintext of bytes. */
+#define SKC_PAD_MODE_ASIF   3 /* Add as many bytes as necessary to emulate an unpadded plaintext of x bytes. */
 typedef int_fast8_t Skc_Pad_Mode_t;
 
 #define SKC_COMMON_PAD_MODE_ADD    SKC_PAD_MODE_ADD
