@@ -8,7 +8,7 @@
 #include "skein512.h"
 #include <Base/mem.h>
 
-#define R_(ptr) ptr BASE_RESTRICT
+#define R_ BASE_RESTRICT
 #define ALIGN_ BASE_ALIGNAS(uint64_t)
 #define INDEX_(u8_ptr, index) \
 	(u8_ptr + ((index) * SKC_THREEFISH512_BLOCK_BYTES))
@@ -40,14 +40,14 @@ ALIGN_ static const uint8_t With_Phi_Version_ID_Hash [SKC_THREEFISH512_BLOCK_BYT
 	0xb9, 0x6d, 0x09, 0xf5, 0x66, 0x31, 0xa3, 0xc5,
 	0xf3, 0x26, 0xeb, 0x6f, 0xa6, 0xac, 0xb0, 0xa6
 };
-static void make_tweak_without_phi (R_(Skc_Catena512*), const uint8_t);
-static void make_tweak_with_phi    (R_(Skc_Catena512*), const uint8_t);
-static void flap_without_phi       (R_(Skc_Catena512*), const uint8_t, const uint8_t);
-static void flap_with_phi          (R_(Skc_Catena512*), const uint8_t, const uint8_t);
-static void gamma                  (R_(Skc_Catena512*), const uint8_t);
-static void phi                    (R_(Skc_Catena512*), const uint8_t);
+static void make_tweak_without_phi (Skc_Catena512* R_, const uint8_t);
+static void make_tweak_with_phi    (Skc_Catena512* R_, const uint8_t);
+static void flap_without_phi       (Skc_Catena512* R_, const uint8_t, const uint8_t);
+static void flap_with_phi          (Skc_Catena512* R_, const uint8_t, const uint8_t);
+static void gamma                  (Skc_Catena512* R_, const uint8_t);
+static void phi                    (Skc_Catena512* R_, const uint8_t);
 
-void make_tweak_without_phi (R_(Skc_Catena512*) ctx, const uint8_t lambda) {
+void make_tweak_without_phi (Skc_Catena512* R_ ctx, const uint8_t lambda) {
 	uint8_t* t = ctx->temp.tw_pw_salt;
 	memcpy(t, Without_Phi_Version_ID_Hash, SKC_THREEFISH512_BLOCK_BYTES);
 	t += SKC_THREEFISH512_BLOCK_BYTES;
@@ -58,7 +58,7 @@ void make_tweak_without_phi (R_(Skc_Catena512*) ctx, const uint8_t lambda) {
 	(*t++) = (uint8_t)SKC_CATENA512_SALT_BYTES;
 	*t     = (uint8_t)((unsigned)SKC_CATENA512_SALT_BYTES >> 8);
 }
-void make_tweak_with_phi (R_(Skc_Catena512*) ctx, const uint8_t lambda) {
+void make_tweak_with_phi (Skc_Catena512* R_ ctx, const uint8_t lambda) {
 	uint8_t* t = ctx->temp.tw_pw_salt;
 	memcpy(t, With_Phi_Version_ID_Hash, SKC_THREEFISH512_BLOCK_BYTES);
 	t += SKC_THREEFISH512_BLOCK_BYTES;
@@ -69,7 +69,7 @@ void make_tweak_with_phi (R_(Skc_Catena512*) ctx, const uint8_t lambda) {
 	(*t++) = (uint8_t)SKC_CATENA512_SALT_BYTES;
 	*t     = (uint8_t)((unsigned)SKC_CATENA512_SALT_BYTES >> 8);
 }
-void flap_without_phi (R_(Skc_Catena512*) ctx, const uint8_t garlic, const uint8_t lambda) {
+void flap_without_phi (Skc_Catena512* R_ ctx, const uint8_t garlic, const uint8_t lambda) {
 #define TEMP_	ctx->temp.flap
 #define GRAPH_	ctx->graph_memory
 #define X_	ctx->x
@@ -113,7 +113,7 @@ void flap_without_phi (R_(Skc_Catena512*) ctx, const uint8_t garlic, const uint8
 #undef GRAPH_
 #undef TEMP_
 }
-void flap_with_phi (R_(Skc_Catena512*) ctx, const uint8_t garlic, const uint8_t lambda) {
+void flap_with_phi (Skc_Catena512* R_ ctx, const uint8_t garlic, const uint8_t lambda) {
 #define TEMP_	ctx->temp.flap
 #define GRAPH_	ctx->graph_memory
 #define X_	ctx->x
@@ -157,7 +157,7 @@ void flap_with_phi (R_(Skc_Catena512*) ctx, const uint8_t garlic, const uint8_t 
 #undef GRAPH_
 #undef TEMP_
 }
-void phi (R_(Skc_Catena512*) ctx, const uint8_t garlic) {
+void phi (Skc_Catena512* R_ ctx, const uint8_t garlic) {
 #define GRAPH_ ctx->graph_memory
 #define TEMP_  ctx->temp.phi
 #define X_     ctx->x
@@ -181,7 +181,7 @@ void phi (R_(Skc_Catena512*) ctx, const uint8_t garlic) {
 #undef TEMP_
 #undef GRAPH_
 }
-void gamma (R_(Skc_Catena512*) ctx, const uint8_t garlic) {
+void gamma (Skc_Catena512* R_ ctx, const uint8_t garlic) {
 #define GRAPH_			ctx->graph_memory
 #define TEMP_			ctx->temp.gamma
 #define SALT_AND_GARLIC_BYTES_	(sizeof(ctx->salt) + sizeof(uint8_t))
@@ -224,13 +224,13 @@ void gamma (R_(Skc_Catena512*) ctx, const uint8_t garlic) {
 #undef GRAPH_
 }
 
-int Skc_Catena512_without_phi (R_(Skc_Catena512*) ctx,
-                               R_(uint8_t*)       output,
-			       R_(uint8_t*)       password,
-			       const int          password_size,
-			       const uint8_t      g_low,
-			       const uint8_t      g_high,
-			       const uint8_t      lambda)
+int Skc_Catena512_without_phi (Skc_Catena512* R_ ctx,
+                               uint8_t* R_       output,
+			       uint8_t* R_       password,
+			       const int         password_size,
+			       const uint8_t     g_low,
+			       const uint8_t     g_high,
+			       const uint8_t     lambda)
 {
 	/* Allocate the graph memory. Free it at the end of the procedure; return on alloc failure. */
 	const uint64_t allocated_bytes = (UINT64_C(1) << (g_high + 6));
@@ -277,13 +277,13 @@ int Skc_Catena512_without_phi (R_(Skc_Catena512*) ctx,
 	COPY_(output, ctx->x);
 	return SKC_CATENA512_SUCCESS;
 }
-int Skc_Catena512_with_phi (R_(Skc_Catena512*) ctx,
-                            R_(uint8_t*)       output,
-			    R_(uint8_t*)       password,
-			    const int          password_size,
-			    const uint8_t      g_low,
-			    const uint8_t      g_high,
-			    const uint8_t      lambda)
+int Skc_Catena512_with_phi (Skc_Catena512* R_ ctx,
+                            uint8_t* R_       output,
+			    uint8_t* R_       password,
+			    const int         password_size,
+			    const uint8_t     g_low,
+			    const uint8_t     g_high,
+			    const uint8_t     lambda)
 {
 	/* Allocate the graph memory. Free it at the end of the procedure; return on alloc failure. */
 	const uint64_t allocated_bytes = UINT64_C(1) << ((int)g_high + 6);

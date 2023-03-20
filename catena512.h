@@ -47,7 +47,7 @@ typedef struct {
 } Skc_Catena512;
 #define SKC_CATENA512_NULL_LITERAL BASE_COMPOUND_LITERAL(Skc_Catena512, 0)
 
-BASE_INLINE void Skc_Catena512_init(Skc_Catena512* ctx)
+SKC_INLINE void Skc_Catena512_init(Skc_Catena512* ctx)
 /* TODO */
 {
   Skc_UBI512_init(&ctx->ubi512);

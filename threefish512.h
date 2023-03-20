@@ -64,25 +64,26 @@ typedef struct {
 /* THREEFISH PROCEDURES. */
 
 /* Calculate and store the key schedule parity words for the key and tweak. */
-BASE_API void Skc_Threefish512_calc_ks_parity_words(uint64_t* const R_ key, uint64_t* const R_ twk);
+BASE_API void
+Skc_Threefish512_calc_ks_parity_words(uint64_t* const R_ key, uint64_t* const R_ twk);
 
-/* Initialize Threefish512 data with a once-computed keyschedule.
- * No return; cannot fail.*/
-SKC_API void Skc_Threefish512_Static_init(
+/* Initialize Threefish512 data with a once-computed keyschedule. Cannot fail. */
+SKC_API void
+Skc_Threefish512_Static_init(
  Skc_Threefish512_Static* const R_ ctx,
  uint64_t* const R_                key_words,    /* Address of SKC_THREEFISH512_EXTERNAL_KEY_WORDS little-endian uint64_t's. */
  uint64_t* const R_                tweak_words); /* Address of SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS little-endian uint64_t's. */
 
-/* Encipher one block, 64 bytes, and store it.
- * No return; cannot fail. */
-SKC_API void Skc_Threefish512_Static_encipher(
+/* Encipher one block, 64 bytes, and store it. Cannot fail. */
+SKC_API void
+Skc_Threefish512_Static_encipher(
  Skc_Threefish512_Static* const R_ ctx,
  void* const                       ciphertext, /* Address to store the encrypted block at. */
  const void* const                 plaintext); /* Address to read the plaintext block from. */
 
-/* Initialize Threefish512 data with a dynamically computed keyschedule.
- * No return; cannot fail. */
-BASE_INLINE void Skc_Threefish512_Dynamic_init(
+/* Initialize Threefish512 data with a dynamically computed keyschedule. Cannot fail. */
+SKC_INLINE void
+Skc_Threefish512_Dynamic_init(
  Skc_Threefish512_Dynamic* const R_ ctx,
  uint64_t* const R_                 key, /* Address of SKC_THREEFISH512_EXTERNAL_KEY_WORDS little-endian uint64_t's. */
  uint64_t* const R_                 twk) /* Address of SKC_THREEFISH512_EXTERNAL_TWEAK_WORDS little-endian uint64_t's. */
@@ -92,9 +93,9 @@ BASE_INLINE void Skc_Threefish512_Dynamic_init(
   ctx->extern_tweak = twk;
 }
 
-/* Encipher one block, 64 bytes, and store it.
- * No return; cannot fail. */
-SKC_API void Skc_Threefish512_Dynamic_encipher(
+/* Encipher one block, 64 bytes, and store it. Cannot fail. */
+SKC_API void
+Skc_Threefish512_Dynamic_encipher(
  Skc_Threefish512_Dynamic* const R_ ctx,
  void* const                        ciphertext, /* Address to store the encrypted block at. */
  const void* const                  plaintext); /* Address to read the plaintext block from. */
@@ -103,14 +104,15 @@ SKC_API void Skc_Threefish512_Dynamic_encipher(
 
 /* Counter Mode Initialization.
  * Before calling this, initialize @ctx->threefish512 with Skc_Threefish512_Static_init().
- * No return; cannot fail. */
-SKC_API void Skc_Threefish512_CTR_init(
+ * Cannot fail. */
+SKC_API void
+Skc_Threefish512_CTR_init(
  Skc_Threefish512_CTR* const R_ ctx,
  const void* const R_           init_vec); /* Address of 32 pseudorandom bytes to use as an initialization vectore for Threefish512 in Counter mode. */
 
-/* XOR input bytes with the Counter Mode keystream.
- * No return; cannot fail. */
-SKC_API void Skc_Threefish512_CTR_xor_keystream(
+/* XOR input bytes with the Counter Mode keystream. Cannot fail. */
+SKC_API void
+Skc_Threefish512_CTR_xor_keystream(
  Skc_Threefish512_CTR* const R_ ctx,
  void*                          output,         /* Address to write @count bytes to. */
  const void*                    input,          /* Address to read  @count bytes from. */

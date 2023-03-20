@@ -19,26 +19,11 @@ typedef Skc_Threefish512_CTR     Ctr_t;
  #error "Bad endian."
 #endif
 
-//#define LOAD_WORD_(Key, Subkey, I) Base_load_le64(Key + (((Subkey) + I) % SKC_THREEFISH512_EXTERNAL_KEY_WORDS))
 #define LOAD_WORD_(Key, Subkey, I) LOAD64_(Key[((Subkey) + I) % SKC_THREEFISH512_EXTERNAL_KEY_WORDS])
 
-//#define STORE_WORD_(Subkey, I, Add) \
- Base_store_le64(\
-  ctx->key_schedule + (((Subkey) * SKC_THREEFISH512_BLOCK_WORDS) + I),\
-  LOAD_WORD_(key, (Subkey), I) + Add\
- )
 #define STORE_WORD_(Subkey, I, Add) \
  ctx->key_schedule[((Subkey) * SKC_THREEFISH512_BLOCK_WORDS) + I] = STORE64_(LOAD_WORD_(key, (Subkey), I) + Add)
 
-//#define MAKE_SUBKEY_(Subkey) \
- STORE_WORD_(Subkey, 0, UINT64_C(0));\
- STORE_WORD_(Subkey, 1, UINT64_C(0));\
- STORE_WORD_(Subkey, 2, UINT64_C(0));\
- STORE_WORD_(Subkey, 3, UINT64_C(0));\
- STORE_WORD_(Subkey, 4, UINT64_C(0));\
- STORE_WORD_(Subkey, 5, Base_load_le64(twk + ((Subkey) % 3)));\
- STORE_WORD_(Subkey, 6, Base_load_le64(twk + (((Subkey) + 1) % 3)));\
- STORE_WORD_(Subkey, 7, (Subkey))
 #define MAKE_SUBKEY_(Subkey) \
  STORE_WORD_(Subkey, 0, UINT64_C(0));\
  STORE_WORD_(Subkey, 1, UINT64_C(0));\
@@ -49,11 +34,11 @@ typedef Skc_Threefish512_CTR     Ctr_t;
  STORE_WORD_(Subkey, 6, LOAD64_(twk[((Subkey) + 1) % 3]));\
  STORE_WORD_(Subkey, 7, (Subkey))
 #define MAKE_4_SUBKEYS_(Start_Subkey) do {\
-  MAKE_SUBKEY_(Start_Subkey + 0);\
-  MAKE_SUBKEY_(Start_Subkey + 1);\
-  MAKE_SUBKEY_(Start_Subkey + 2);\
-  MAKE_SUBKEY_(Start_Subkey + 3);\
- } while (0)
+ MAKE_SUBKEY_(Start_Subkey + 0);\
+ MAKE_SUBKEY_(Start_Subkey + 1);\
+ MAKE_SUBKEY_(Start_Subkey + 2);\
+ MAKE_SUBKEY_(Start_Subkey + 3);\
+} while (0)
 
 void Skc_Threefish512_Static_init(
  Static_t* const R_ ctx,
@@ -70,15 +55,6 @@ void Skc_Threefish512_Static_init(
   MAKE_SUBKEY_(18);
 }
 
-//#define DO_MIX_(Idx, Rot_Const) do {\
-  uint64_t w0, w1;\
-  w0 = Base_load_le64(ctx->state + ((Idx) * 2));\
-  w1 = Base_load_le64(ctx->state + (((Idx) * 2) + 1));\
-  w0 += w1;\
-  Base_store_le64(ctx->state + ((Idx) * 2), w0);\
-  w1 = Base_rotl_64(w1, Rot_Const) ^ w0;\
-  Base_store_le64(ctx->state + (((Idx) * 2) + 1), w1);\
-} while (0)
 #define DO_MIX_(Idx, Rot_Const) do {\
   uint64_t w0, w1;\
   w0 = LOAD64_(ctx->state[(Idx) * 2]);\
@@ -88,39 +64,13 @@ void Skc_Threefish512_Static_init(
   ctx->state[((Idx) * 2) + 1] = STORE64_(Base_rotl_64(w1, Rot_Const) ^ w0);\
 } while (0)
 
-#define SUBKEY_INDEX_(Round) ((Round) / 4) /* Rounds 0-3 use subkey idx 0, 4-7 use subkey idx 1, etc. */
+/* Rounds 0-3 use subkey idx 0, 4-7 use subkey idx 1, etc. */
+#define SUBKEY_INDEX_(Round) ((Round) / 4)
 #define SKI_(Rnd) SUBKEY_INDEX_(Rnd)
-
-#define SUBKEY_OFFSET_(Round) (SKI_(Round) * SKC_THREEFISH512_BLOCK_WORDS) /* What is the offset of this round's subkey? */
+/* What is the offset of this round's subkey? */
+#define SUBKEY_OFFSET_(Round) (SKI_(Round) * SKC_THREEFISH512_BLOCK_WORDS)
 #define SKO_(Rnd) SUBKEY_OFFSET_(Rnd)
 
-//#define USE_SUBKEY_(Op, Rnd) do {\
-  uint64_t st, ks;\
-  st = Base_load_le64(ctx->state + 0);\
-  ks = Base_load_le64(ctx->key_schedule + (SKO_(Rnd) + 0));\
-  Base_store_le64(ctx->state + 0, st Op ks);\
-  st = Base_load_le64(ctx->state + 1);\
-  ks = Base_load_le64(ctx->key_schedule + (SKO_(Rnd) + 1));\
-  Base_store_le64(ctx->state + 1, st Op ks);\
-  st = Base_load_le64(ctx->state + 2);\
-  ks = Base_load_le64(ctx->key_schedule + (SKO_(Rnd) + 2));\
-  Base_store_le64(ctx->state + 2, st Op ks);\
-  st = Base_load_le64(ctx->state + 3);\
-  ks = Base_load_le64(ctx->key_schedule + (SKO_(Rnd) + 3));\
-  Base_store_le64(ctx->state + 3, st Op ks);\
-  st = Base_load_le64(ctx->state + 4);\
-  ks = Base_load_le64(ctx->key_schedule + (SKO_(Rnd) + 4));\
-  Base_store_le64(ctx->state + 4, st Op ks);\
-  st = Base_load_le64(ctx->state + 5);\
-  ks = Base_load_le64(ctx->key_schedule + (SKO_(Rnd) + 5));\
-  Base_store_le64(ctx->state + 5, st Op ks);\
-  st = Base_load_le64(ctx->state + 6);\
-  ks = Base_load_le64(ctx->key_schedule + (SKO_(Rnd) + 6));\
-  Base_store_le64(ctx->state + 6, st Op ks);\
-  st = Base_load_le64(ctx->state + 7);\
-  ks = Base_load_le64(ctx->key_schedule + (SKO_(Rnd) + 7));\
-  Base_store_le64(ctx->state + 7, st Op ks);\
-} while (0)
 #define USE_SUBKEY_(Op, Rnd) do {\
   uint64_t st, ks;\
   st = LOAD64_(ctx->state[0]);\
@@ -221,36 +171,6 @@ void Skc_Threefish512_Static_encipher(
 }
 
 #undef USE_SUBKEY_
-//#define USE_SUBKEY_(Op, Rnd) do {\
-  uint64_t st, ek, et;\
-  st = Base_load_le64(ctx->state + 0);\
-  ek = LOAD_WORD_(ctx->extern_key, SKI_(Rnd), 0);\
-  Base_store_le64(ctx->state + 0, st Op ek);\
-  st = Base_load_le64(ctx->state + 1);\
-  ek = LOAD_WORD_(ctx->extern_key, SKI_(Rnd), 1);\
-  Base_store_le64(ctx->state + 1, st Op ek);\
-  st = Base_load_le64(ctx->state + 2);\
-  ek = LOAD_WORD_(ctx->extern_key, SKI_(Rnd), 2);\
-  Base_store_le64(ctx->state + 2, st Op ek);\
-  st = Base_load_le64(ctx->state + 3);\
-  ek = LOAD_WORD_(ctx->extern_key, SKI_(Rnd), 3);\
-  Base_store_le64(ctx->state + 3, st Op ek);\
-  st = Base_load_le64(ctx->state + 4);\
-  ek = LOAD_WORD_(ctx->extern_key, SKI_(Rnd), 4);\
-  Base_store_le64(ctx->state + 4, st Op ek);\
-  st = Base_load_le64(ctx->state + 5);\
-  ek = LOAD_WORD_(ctx->extern_key, SKI_(Rnd), 5);\
-  et = Base_load_le64(ctx->extern_tweak + (SKI_(Rnd) % 3));\
-  Base_store_le64(ctx->state + 5, st Op (ek + et));\
-  st = Base_load_le64(ctx->state + 6);\
-  ek = LOAD_WORD_(ctx->extern_key, SKI_(Rnd), 6);\
-  et = Base_load_le64(ctx->extern_tweak + ((SKI_(Rnd) + 1) % 3));\
-  Base_store_le64(ctx->state + 6, st Op (ek + et));\
-  st = Base_load_le64(ctx->state + 7);\
-  ek = LOAD_WORD_(ctx->extern_key, SKI_(Rnd), 7);\
-  et = SKI_(Rnd);\
-  Base_store_le64(ctx->state + 7, st Op (ek + et));\
-} while (0)
 #define USE_SUBKEY_(Op, Rnd) do {\
   uint64_t st, ek, et;\
   st = LOAD64_(ctx->state[0]);\
@@ -326,6 +246,13 @@ void Skc_Threefish512_CTR_init(Ctr_t* const R_ ctx, const void* const R_ init_ve
    * be initialized during Skc_Threefish512_CTR_xor_keystream(). */
 }
 
+#define INC_U64_(U64p) do {\
+  uint64_t tmp;\
+  memcpy(&tmp, U64p, sizeof(tmp));\
+  tmp = STORE64_(LOAD64_(tmp) + 1);\
+  memcpy(U64p, &tmp, sizeof(tmp));\
+} while(0)
+
 void Skc_Threefish512_CTR_xor_keystream(
  Ctr_t* const R_ ctx,
  void*           v_output,
@@ -335,17 +262,12 @@ void Skc_Threefish512_CTR_xor_keystream(
 {
   uint8_t*       output = (uint8_t*)      v_output;
   const uint8_t* input  = (const uint8_t*)v_input;
-  //#define INC_U64_(u64p) Base_store_le64(u64p, Base_load_le64(u64p) + UINT64_C(1))
-  #define INC_U64_(U64p) do {\
-    *(U64p) = STORE64_(LOAD64_(*(U64p)) + 1);\
-  } while (0)
   if (start_byte == 0)
     memset(ctx->keystream, 0, sizeof(uint64_t));
   else {
     uint64_t starting_block = start_byte / SKC_THREEFISH512_BLOCK_BYTES;
     int_fast8_t offset = start_byte % SKC_THREEFISH512_BLOCK_BYTES;
     int_fast8_t bytes  = SKC_THREEFISH512_BLOCK_BYTES - offset;
-    //Base_store_le64(ctx->keystream, starting_block);
     ctx->keystream[0] = STORE64_(starting_block);
     Skc_Threefish512_Static_encipher(&ctx->threefish512, ctx->buffer, ctx->keystream);
     INC_U64_(ctx->keystream);
@@ -382,7 +304,6 @@ void Skc_Threefish512_CTR_xor_keystream(
 
 void Skc_Threefish512_calc_ks_parity_words(uint64_t* const R_ key, uint64_t* const R_ twk)
 {
-#if 1
   key[8] = STORE64_(
             SKC_THREEFISH512_CONSTANT_240 ^
             LOAD64_(key[0]) ^ LOAD64_(key[1]) ^
@@ -391,22 +312,4 @@ void Skc_Threefish512_calc_ks_parity_words(uint64_t* const R_ key, uint64_t* con
 	    LOAD64_(key[6]) ^ LOAD64_(key[7])
 	   );
   twk[2] = STORE64_(LOAD64_(twk[0]) ^ LOAD64_(twk[1]));
-#else
-  Base_store_le64(
-   key + 8,
-   SKC_THREEFISH512_CONSTANT_240 ^
-   Base_load_le64(key + 0) ^
-   Base_load_le64(key + 1) ^
-   Base_load_le64(key + 2) ^
-   Base_load_le64(key + 3) ^
-   Base_load_le64(key + 4) ^
-   Base_load_le64(key + 5) ^
-   Base_load_le64(key + 6) ^
-   Base_load_le64(key + 7)
-  );
-  Base_store_le64(
-   twk + 2,
-   Base_load_le64(twk + 0) ^ Base_load_le64(twk + 1)
-  );
-#endif
 }
