@@ -1,5 +1,5 @@
 option('native_optimize', type: 'boolean', value: false)
-option('Base_static', type: 'boolean', value: false)
+option('SSC_static', type: 'boolean', value: false)
 option('static', type: 'boolean', value: false)
 option('lua', type: 'boolean', value: false)
 option('endian', type: 'combo', choices: ['auto', 'little', 'big'], value: 'auto')
