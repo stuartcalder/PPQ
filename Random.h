@@ -47,6 +47,15 @@ PPQ_getRandomUint64WithinRange(
   return PPQ_getRandomUint64WithinRangeInjectEntropy(csprng, min_val, max_val, SSC_NULL);
 }
 
+PPQ_INLINE uint64_t
+PPQ_getRandomNaturalNumberInjectEntropy(
+ PPQ_CSPRNG*    csprng,
+ const uint64_t nat_max,
+ const char* R_ entropy_cstr)
+{
+  return PPQ_getRandomUint64WithinRangeInjectEntropy(csprng, 0, nat_max, entropy_cstr);
+}
+
 SSC_END_C_DECLS
 #undef IMPL_
 #undef R_

@@ -117,6 +117,7 @@ PPQ_DragonflyV1_encrypt(
       CLEANUP_ERROR_(ctx->secret);
       SSC_errx("Error: Catena512 failed with error code %d...\nAllocating too much memory?\n", status);
     }
+    /* After CATENA executes securely destroy all its data as well as the input password. */
     SSC_secureZero(&ctx->secret.catena512, sizeof(ctx->secret.catena512));
     SSC_secureZero(input->password_buffer, sizeof(input->password_buffer));
     /* Catena512 will output 512 bits. We will hash these 512 bits into 1024 output bits using Skein
@@ -126,8 +127,7 @@ PPQ_DragonflyV1_encrypt(
      ctx->secret.hash_out, /*output*/
      ctx->secret.hash_out, /*input*/
      PPQ_THREEFISH512_BLOCK_BYTES, /*input size*/
-     (PPQ_THREEFISH512_BLOCK_BYTES * 2) /*output size*/
-    );
+     (PPQ_THREEFISH512_BLOCK_BYTES * 2)); /*output size*/
     SSC_STATIC_ASSERT(sizeof(ctx->secret.hash_out) == (PPQ_THREEFISH512_BLOCK_BYTES * 2), "Size reminder.");
     /* Get the encryption and authentication keys respectively. */
     memcpy(ctx->secret.enc_key , enc_key , PPQ_THREEFISH512_BLOCK_BYTES);
@@ -137,22 +137,28 @@ PPQ_DragonflyV1_encrypt(
     PPQ_Threefish512Static_init(
      &ctx->secret.threefish512_ctr.threefish512,
      ctx->secret.enc_key,
-     ctx->tf_tweak
-    );
+     ctx->tf_tweak);
   }
+  /* Start writing bytes at the beginning of the output memory-map. */
   uint8_t* out = output_mmap->ptr;
+  /* Write the DRAGONFLY_V1_ID to the beginning of the memory-map. */
   memcpy(out, PPQ_DRAGONFLY_V1_ID, PPQ_DRAGONFLY_V1_ID_NBYTES);
   out += PPQ_DRAGONFLY_V1_ID_NBYTES;
+  /* Store a little-endian encoded uint64_t representing the memory-map's size. */
   SSC_storeLittleEndian64(out, output_mmap->size);
   out += sizeof(uint64_t);
+  /* Store th lower and upper memory bounds, the iteration count, and the usage/non-usage of the Phi function respectively. */
   (*out++) = input->g_low;
   (*out++) = input->g_high;
   (*out++) = input->lambda;
   (*out++) = input->use_phi;
+  /* Store the Threefish512 tweak. */
   memcpy(out, ctx->tf_tweak, PPQ_THREEFISH512_TWEAK_BYTES);
   out += PPQ_THREEFISH512_TWEAK_BYTES;
+  /* Store the CATENA-512 salt. */
   memcpy(out, ctx->catena512_salt, PPQ_CATENA512_SALT_BYTES);
   out += PPQ_CATENA512_SALT_BYTES;
+  /* Store the 256-bit Threefish512 Counter Mode Initialization Vector. */
   memcpy(out, ctx->ctr_iv, PPQ_THREEFISH512COUNTERMODE_IV_BYTES);
   out += PPQ_THREEFISH512COUNTERMODE_IV_BYTES;
   {

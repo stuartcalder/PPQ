@@ -100,6 +100,11 @@ PPQ_DragonflyV1Decrypt_init(PPQ_DragonflyV1Decrypt* ctx)
 /*=============================================================================================*/
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+/* PPQ_DragonflyV1_encrypt ()
+ *     Given an initialized input SSC_MemMap, @input_mmap, initialize the output
+ *     SSC_MemMap @output_mmap and encrypt the data mapped in @input_mmap storing the
+ *     ciphertext data into @output_mmap. Provide @output_filepath to allow for removing
+ *     files from the filesystem in case the encryption fails. */
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 PPQ_API void PPQ_DragonflyV1_encrypt(
  PPQ_DragonflyV1Encrypt* const R_ ctx,
@@ -109,6 +114,9 @@ PPQ_API void PPQ_DragonflyV1_encrypt(
 /*=============================================================================================*/
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+/* PPQ_DragonflyV1_decrypt ()
+ *     Given a
+ */
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 PPQ_API void PPQ_DragonflyV1_decrypt(
  PPQ_DragonflyV1Decrypt* const R_ ctx,
