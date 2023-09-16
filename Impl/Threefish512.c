@@ -170,8 +170,8 @@ void PPQ_Threefish512Static_init(
 
 #define ENC_ROUND_(Rnd_Start, Rc0_0, Rc0_1, Rc0_2, Rc0_3,\
                               Rc1_0, Rc1_1, Rc1_2, Rc1_3,\
-			      Rc2_0, Rc2_1, Rc2_2, Rc2_3,\
-			      Rc3_0, Rc3_1, Rc3_2, Rc3_3)\
+                              Rc2_0, Rc2_1, Rc2_2, Rc2_3,\
+                              Rc3_0, Rc3_1, Rc3_2, Rc3_3)\
  ADD_SUBKEY_(Rnd_Start);\
  MIX4_PERM_(Rc0_0, Rc0_1, Rc0_2, Rc0_3);\
  MIX4_PERM_(Rc1_0, Rc1_1, Rc1_2, Rc1_3);\
@@ -180,13 +180,13 @@ void PPQ_Threefish512Static_init(
 
 #define ENC_ROUND_PHASE_0_(Rnd_Start) ENC_ROUND_(Rnd_Start, 46, 36, 19, 37,\
                                                             33, 27, 14, 42,\
-							    17, 49, 36, 39,\
-							    44,  9, 54, 56)
+                                                            17, 49, 36, 39,\
+                                                            44,  9, 54, 56)
 
 #define ENC_ROUND_PHASE_1_(Rnd_Start) ENC_ROUND_(Rnd_Start, 39, 30, 34, 24,\
                                                             13, 50, 10, 17,\
-							    25, 29, 39, 43,\
-							     8, 35, 56, 22)
+                                                            25, 29, 39, 43,\
+                                                             8, 35, 56, 22)
 void PPQ_Threefish512Static_encipher(
  Static_t* const R_ ctx,
  void* const        v_ctext,
