@@ -267,8 +267,10 @@ SSC_Error_t PPQ_Catena512_noPhi(
   make_tweak_without_phi(ctx, lambda);
   /* Copy the password into the "Tweak, Password, Salt" buffer, right after the tweak. */
   memcpy(pw, password, password_size);
+  #if 0 /* Disable this for now. */
   /* Zero out the input password buffer. */
   SSC_secureZero(password, password_size);
+  #endif
   /* Copy the salt into the "Tweak, Password, Salt" buffer, right after the password. */
   memcpy(salt, ctx->salt, sizeof(ctx->salt));
   /* Hash the "Tweak, Password, Salt" buffer into the "X" buffer. */
@@ -322,7 +324,9 @@ SSC_Error_t PPQ_Catena512_usePhi(
   /* Construct the tweak; concatenate with password and salt and hash into the x buffer. */
   make_tweak_with_phi(ctx, lambda);
   memcpy(pw, password, password_size);
+  #if 0
   SSC_secureZero(password, password_size);
+  #endif
   memcpy(salt, ctx->salt, sizeof(ctx->salt));
   PPQ_Skein512_hashNative(&ctx->ubi512, ctx->x, tw, password_size + (PPQ_CATENA512_TWEAK_BYTES + PPQ_CATENA512_SALT_BYTES));
   /* Initial flap; hash the x buffer into itself. */
