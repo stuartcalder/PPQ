@@ -74,7 +74,7 @@ PPQ_API SSC_Error_t
 PPQ_Catena512_noPhi(
  PPQ_Catena512* R_ ctx,
  uint8_t* R_       output,
- uint8_t* R_       password,
+ const uint8_t* R_ password,
  const int         password_size,
  const uint8_t     g_low,
  const uint8_t     g_high,
@@ -95,7 +95,7 @@ PPQ_API SSC_Error_t
 PPQ_Catena512_usePhi(
  PPQ_Catena512* R_ ctx,
  uint8_t* R_       output,
- uint8_t* R_       password,
+ const uint8_t* R_ password,
  const int         password_size,
  const uint8_t     g_low,
  const uint8_t     g_high,

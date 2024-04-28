@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <SSC/Macro.h>
 #include <SSC/Memory.h>
 #include <SSC/Operation.h>
 
